@@ -1,18 +1,15 @@
 "use client"
-import * as React from 'react';
-import { useUser } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
-import { Box, Button, Container, TextField, Typography, Paper, Grid, Fade, AppBar, Toolbar, CircularProgress, FormControlLabel, Checkbox } from "@mui/material";
-import { useState, useEffect } from "react";
-import AddIcon from '@mui/icons-material/Add';
-import SendIcon from '@mui/icons-material/Send';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import React, { useState, useEffect } from 'react';
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PlusCircle, Send, Pencil, Trash2 } from "lucide-react";
 import { db } from "@/firebase";
 import { doc, collection, setDoc, getDoc } from "firebase/firestore";
 import Link from 'next/link'
@@ -80,24 +77,11 @@ export default function Profile() {
 
     if (!isLoaded || !isSignedIn) {
         return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '100vh',
-                    backgroundColor: '#2E2E2E',
-                    color: '#FCD19C',
-                    textAlign: 'center'
-                }}
-            >
-                <CircularProgress sx={{ color: '#FCD19C', mb: 2 }} />
-                <Typography variant="h6" sx={{ color: '#FCD19C' }}>
-                    Loading your profile...
-                </Typography>
-            </Box>
-        )
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-orange-200 text-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-orange-200"></div>
+                <h2 className="mt-4 text-xl">Loading your profile...</h2>
+            </div>
+        );
     }
 
     const handleCheckboxChange = (event) => {
@@ -124,7 +108,9 @@ export default function Profile() {
         } else {
             setExperiences([...experiences, { ...experience, currentlyWorking }]);
         }
-        handleClose();
+        handleClose(); // Close the dialog after adding/updating
+        setCurrentExperience({}); // Clear the current experience state
+        setEditIndex(null); // Reset edit index
     };
 
     const handleEdit = (index) => {
@@ -142,10 +128,13 @@ export default function Profile() {
     };
 
     const saveProfile = async () => {
-        // if (!user || !user.id) return;
-
-        const userDocRef = doc(collection(db, 'users'), user.id);
-
+        if (!user || !user.id) {
+            console.error('User not found or user ID is missing.');
+            return;
+        }
+    
+        const userDocRef = doc(db, 'users', user.id);
+    
         try {
             await setDoc(userDocRef, {
                 experiences,
@@ -154,7 +143,8 @@ export default function Profile() {
                 skills,
                 additionalInfo
             }, { merge: true });
-            
+    
+            console.log('Profile updated successfully.');
         } catch (error) {
             console.error('Error updating profile:', error);
             alert('Error updating profile.');
@@ -162,8 +152,10 @@ export default function Profile() {
     };
 
     const submitData = async () => {
-        if (!user || !user.id) return;
-    
+        if (!user || !user.id) {
+            console.error('User not found or user ID is missing.');
+            return;
+        }
         // Create an object with profile data and userId
         const profileData = {
             userId: user.id,
@@ -174,349 +166,228 @@ export default function Profile() {
             additionalInfo
         };
     
+        // try {
+        //     const response = await fetch('/api/generate', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //         },
+        //         body: JSON.stringify(profileData), // Send all profile data and userId
+        //     });
+    
+        //     if (!response.ok) {
+        //         console.error('Failed to fetch data');
+        //         alert('Error submitting flashcards.');
+        //         return;
+        //     }
+    
+        //     const data = await response.json();
+        //     console.log(data); // Process the response data as needed
+        // } catch (error) {
+        //     console.error('Error:', error);
+        //     alert('Error.');
+        // }
+    };
+
+    const handleSaveClick = async () => {
         try {
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(profileData), // Send all profile data and userId
-            });
-    
-            if (!response.ok) {
-                console.error('Failed to fetch data');
-                alert('Error submitting flashcards.');
-                return;
-            }
-    
-            const data = await response.json();
-            console.log(data); // Process the response data as needed
+            await saveProfile(); // Wait for profile to be saved
+            await submitData();  // Wait for submission after profile is saved
+            alert('Profile updated!');
         } catch (error) {
-            console.error('Error:', error);
-            alert('Error.');
+            console.error('Error updating profile:', error);
+            alert('Error updating profile.');
         }
     };
     
+    
 
     return (
-        <Container maxWidth="100%" sx={{ backgroundColor: '#2E2E2E', minHeight: '100vh', p: 0 }}>
-            <Fade in={true} timeout={1000}>
-                <Paper elevation={3} sx={{ p: 4, mt: 4, borderRadius: 2, backgroundColor: '#1C1C1C' }}>
-                    <Typography variant="h2" align="center" gutterBottom sx={{ fontWeight: 'bold', color: '#FCD19C' }}>
-                        Your Profile
-                    </Typography>
-                    <form>
-                        <Grid container spacing={4}>
-                            <ProfileSection title="Education">
-                                <CustomTextField
-                                    label="Highest level of education and field of study"
-                                    placeholder="e.g., Bachelor's in Computer Science"
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                    value={education.highestEducation}
-                                    onChange={(e) => setEducation({ ...education, highestEducation: e.target.value })
-                                    }
-                                />
-                                <CustomTextField
-                                    label="Relevant certifications"
-                                    placeholder="e.g., AWS Certified Solutions Architect"
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                    value={education.certifications}
-                                    onChange={(e) => setEducation({ ...education, certifications: e.target.value })}
-                                />
-                            </ProfileSection>
+        <div className="container mx-auto p-4 bg-gray-900 min-h-screen">
+            <Card className="mt-4 bg-gray-800">
+                <CardHeader>
+                    <CardTitle className="text-4xl font-bold text-center text-orange-200">Your Profile</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={async (event) => {
+                        event.preventDefault(); // Prevent default form submission behavior
+                        console.log('Form submit event triggered');
+                        await handleSaveClick(); // Call the save and submit functions
+                    }}>
+                        <ProfileSection title="Education">
+                            <CustomInput
+                                label="Highest level of education and field of study"
+                                placeholder="e.g., Bachelor's in Computer Science"
+                                value={education.highestEducation}
+                                onChange={(e) => setEducation({ ...education, highestEducation: e.target.value })}
+                            />
+                            <CustomInput
+                                label="Relevant certifications"
+                                placeholder="e.g., AWS Certified Solutions Architect"
+                                value={education.certifications}
+                                onChange={(e) => setEducation({ ...education, certifications: e.target.value })}
+                            />
+                        </ProfileSection>
 
-                            <ProfileSection title="Work Experience">
-                                <Typography variant="body1" gutterBottom sx={{ color: '#FCD19C' }}>
-                                    Add your relevant work experiences below:
-                                </Typography>
-                                {experiences.map((exp, index) => (
-                                    <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #FCD19C', borderRadius: 2, backgroundColor: '#333' }}>
-                                        <Typography variant="body1" sx={{ color: '#fff' }}>
-                                            {exp.Company} - {exp.Position}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: '#ccc' }}>
-                                            {exp['Start Date']} - {exp.currentlyWorking ? 'Present' : exp['End Date']}
-                                        </Typography>
-                                        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Button
-                                                onClick={() => handleEdit(index)}
-                                                sx={{ color: '#FCD19C' }}
-                                                startIcon={<EditIcon />}
-                                            >
-                                                Edit
+                        <ProfileSection title="Work Experience">
+                            <p className="text-orange-200">Add your relevant work experiences below:</p>
+                            {experiences.map((exp, index) => (
+                                <Card key={index} className="mb-4 bg-gray-700">
+                                    <CardContent className="p-4">
+                                        <p className="text-white">{exp.Company} - {exp.Position}</p>
+                                        <p className="text-gray-300">{exp['Start Date']} - {exp.currentlyWorking ? 'Present' : exp['End Date']}</p>
+                                        <div className="mt-2 flex items-center gap-2">
+                                            <Button variant="outline" type="button" size="sm" onClick={() => handleEdit(index)}>
+                                                <Pencil className="mr-2 h-4 w-4" /> Edit
                                             </Button>
-                                            <Button
-                                                onClick={() => handleDelete(index)}
-                                                sx={{ color: '#FCD19C' }}
-                                                startIcon={<DeleteIcon />}
-                                            >
-                                                Delete
+                                            <Button variant="outline" type="button" size="sm" onClick={() => handleDelete(index)}>
+                                                <Trash2 className="mr-2 h-4 w-4" /> Delete
                                             </Button>
-                                        </Box>
-                                    </Box>
-                                ))}
-                                <Button
-                                    variant="outlined"
-                                    startIcon={<AddIcon />}
-                                    onClick={handleClickOpen}
-                                    sx={{ mt: 2, borderColor: '#FCD19C', color: '#FCD19C' }}
-                                >
-                                    Add Work Experience
-                                </Button>
-                                <Dialog
-                                    open={open}
-                                    onClose={handleClose}
-                                    PaperProps={{
-                                        component: 'form',
-                                        onSubmit: (event) => {
-                                            event.preventDefault();
-                                            const formData = new FormData(event.currentTarget);
-                                            const formJson = Object.fromEntries(formData.entries());
-                                            addExperience(formJson);
-                                        },
-                                    }}
-                                >
-                                    <DialogTitle>Work Experience</DialogTitle>
-                                    <DialogContent>
-                                        <DialogContentText>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            <Dialog open={open} onOpenChange={setOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline">
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Work Experience
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Work Experience</DialogTitle>
+                                        <DialogDescription>
                                             Add your work experience here. Be as detailed as possible in your descriptions.
-                                        </DialogContentText>
-                                        <TextField
-                                            autoFocus
-                                            required
-                                            margin="dense"
-                                            id="company-name"
-                                            name="Company"
-                                            label="Company Name"
-                                            type="text"
-                                            fullWidth
-                                            variant="standard"
-                                            defaultValue={currentExperience.Company || ''}
-                                        />
-                                        <TextField
-                                            required
-                                            margin="dense"
-                                            id="position"
-                                            name="Position"
-                                            label="Position"
-                                            type="text"
-                                            fullWidth
-                                            variant="standard"
-                                            defaultValue={currentExperience.Position || ''}
-                                        />
-                                        <TextField
-                                            required
-                                            margin="dense"
-                                            id="start-date"
-                                            name="Start Date"
-                                            label="Start Date"
-                                            type="date"
-                                            fullWidth
-                                            InputLabelProps={{
-                                                shrink: true,
-                                            }}
-                                            variant="standard"
-                                            defaultValue={currentExperience['Start Date'] || ''}
-                                        />
-                                        {!currentlyWorking && (
-                                            <TextField
-                                                margin="dense"
-                                                id="end-date"
-                                                name="End Date"
-                                                label="End Date"
-                                                type="date"
-                                                fullWidth
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                                variant="standard"
-                                                defaultValue={currentExperience['End Date'] || ''}
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <form onSubmit={(event) => {
+                                        event.preventDefault();
+                                        const formData = new FormData(event.currentTarget);
+                                        const formJson = Object.fromEntries(formData.entries());
+                                        addExperience(formJson);
+                                    }}>
+                                        <div className="grid gap-4 py-4">
+                                            <CustomInput
+                                                name="Company"
+                                                label="Company Name"
+                                                defaultValue={currentExperience.Company || ''}
+                                                required
                                             />
-                                        )}
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={currentlyWorking}
-                                                    onChange={handleCheckboxChange}
-                                                    name="currentlyWorking"
-                                                    color="primary"
+                                            <CustomInput
+                                                name="Position"
+                                                label="Position"
+                                                defaultValue={currentExperience.Position || ''}
+                                                required
+                                            />
+                                            <CustomInput
+                                                name="Start Date"
+                                                label="Start Date"
+                                                type="date"
+                                                defaultValue={currentExperience['Start Date'] || ''}
+                                                required
+                                            />
+                                            {!currentlyWorking && (
+                                                <CustomInput
+                                                    name="End Date"
+                                                    label="End Date"
+                                                    type="date"
+                                                    defaultValue={currentExperience['End Date'] || ''}
                                                 />
-                                            }
-                                            label="Currently Working Here"
-                                        />
-                                        <TextField
-                                            margin="dense"
-                                            id="description"
-                                            name="Description"
-                                            label="Description"
-                                            type="text"
-                                            fullWidth
-                                            multiline
-                                            rows={4}
-                                            variant="standard"
-                                            defaultValue={currentExperience.Description || ''}
-                                        />
-                                        <TextField
-                                            margin="dense"
-                                            id="personal-experience"
-                                            name="Personal Experience"
-                                            label="Personal Experience"
-                                            type="text"
-                                            fullWidth
-                                            multiline
-                                            rows={4}
-                                            variant="standard"
-                                            defaultValue={currentExperience['Personal Experience'] || ''}
-                                        />
-                                        <TextField
-                                            margin="dense"
-                                            id="skills"
-                                            name="Skills"
-                                            label="Skills Used/Learned"
-                                            type="text"
-                                            fullWidth
-                                            multiline
-                                            rows={2}
-                                            variant="standard"
-                                            defaultValue={currentExperience.Skills || ''}
-                                        />
-                                    </DialogContent>
-                                    <DialogActions>
-                                        <Button onClick={handleClose}>Cancel</Button>
-                                        <Button type="submit">Save Experience</Button>
-                                    </DialogActions>
-                                </Dialog>
-                            </ProfileSection>
+                                            )}
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id="currentlyWorking"
+                                                    checked={currentlyWorking}
+                                                    onCheckedChange={setCurrentlyWorking}
+                                                />
+                                                <Label htmlFor="currentlyWorking">Currently Working Here</Label>
+                                            </div>
+                                            <Textarea
+                                                name="Description"
+                                                placeholder="Description"
+                                                defaultValue={currentExperience.Description || ''}
+                                            />
+                                            <Textarea
+                                                name="Personal Experience"
+                                                placeholder="Personal Experience"
+                                                defaultValue={currentExperience['Personal Experience'] || ''}
+                                            />
+                                            <CustomInput
+                                                name="Skills"
+                                                label="Skills Used/Learned"
+                                                defaultValue={currentExperience.Skills || ''}
+                                            />
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="submit">Save Experience</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </ProfileSection>
 
-                            <ProfileSection title="Career Goals">
-                                <CustomTextField
-                                    label="Short-term and long-term goals"
-                                    placeholder="Describe your career aspirations"
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                    value={careerGoals.goals}
-                                    onChange={(e) => setCareerGoals({ ...careerGoals, goals: e.target.value })}
-                                />
-                                <CustomTextField
-                                    label="Where do you see yourself in 5 years?"
-                                    placeholder="Your future vision"
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                    value={careerGoals.visionIn5Years}
-                                    onChange={(e) => setCareerGoals({ ...careerGoals, visionIn5Years: e.target.value })}
-                                />
-                            </ProfileSection>
+                        <ProfileSection title="Career Goals">
+                            <CustomInput
+                                label="Short-term and long-term goals"
+                                placeholder="Describe your career aspirations"
+                                value={careerGoals.goals}
+                                onChange={(e) => setCareerGoals({ ...careerGoals, goals: e.target.value })}
+                            />
+                            <CustomInput
+                                label="Where do you see yourself in 5 years?"
+                                placeholder="Your future vision"
+                                value={careerGoals.visionIn5Years}
+                                onChange={(e) => setCareerGoals({ ...careerGoals, visionIn5Years: e.target.value })}
+                            />
+                        </ProfileSection>
 
-                            <ProfileSection title="Skills">
-                                <CustomTextField
-                                    label="Top three professional skills"
-                                    placeholder="e.g., Leadership, Problem-solving, Python"
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                    value={skills.topSkills}
-                                    onChange={(e) => setSkills({ ...skills, topSkills: e.target.value })}
-                                />
-                                <CustomTextField
-                                    label="Strengths and areas to improve"
-                                    placeholder="Professional strengths and development areas"
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                    value={skills.strengthsAndAreas}
-                                    onChange={(e) => setSkills({ ...skills, strengthsAndAreas: e.target.value })}
-                                />
-                            </ProfileSection>
+                        <ProfileSection title="Skills">
+                            <CustomInput
+                                label="Top three professional skills"
+                                placeholder="e.g., Leadership, Problem-solving, Python"
+                                value={skills.topSkills}
+                                onChange={(e) => setSkills({ ...skills, topSkills: e.target.value })}
+                            />
+                            <CustomInput
+                                label="Strengths and areas to improve"
+                                placeholder="Professional strengths and development areas"
+                                value={skills.strengthsAndAreas}
+                                onChange={(e) => setSkills({ ...skills, strengthsAndAreas: e.target.value })}
+                            />
+                        </ProfileSection>
 
-                            <ProfileSection title="Additional Information">
-                                <CustomTextField
-                                    label="Anything else you'd like to add"
-                                    placeholder="Other relevant information"
-                                    fullWidth
-                                    variant="outlined"
-                                    margin="normal"
-                                    value={additionalInfo.otherInfo}
-                                    onChange={(e) => setAdditionalInfo({ ...additionalInfo, otherInfo: e.target.value })}
-                                />
-                            </ProfileSection>
-                        </Grid>
+                        <ProfileSection title="Additional Information">
+                            <CustomInput
+                                label="Anything else you'd like to add"
+                                placeholder="Other relevant information"
+                                value={additionalInfo.otherInfo}
+                                onChange={(e) => setAdditionalInfo({ ...additionalInfo, otherInfo: e.target.value })}
+                            />
+                        </ProfileSection>
 
                         <Button
-                            variant="outlined"
-                            endIcon={<SendIcon />}
-                            sx={{
-                                mt: 4,
-                                backgroundColor: '#FCD19C',
-                                color: "#000",
-                                ":hover": {backgroundColor: '#e0a44d',}
-                            }}
-                            onClick={() => {
-                                saveProfile();
-                                submitData();
-                                alert('Profile updated!');
-                            }}
+                            type="submit"
+                            className="mt-8 bg-orange-200 text-black hover:bg-orange-300"
                         >
-                            Update Profile
+                            <Send className="mr-2 h-4 w-4" /> Update Profile
                         </Button>
                     </form>
-                </Paper>
-            </Fade>
-        </Container>
+                </CardContent>
+            </Card>
+        </div>
     );
 }
 
 const ProfileSection = ({ title, children }) => (
-    <Grid item xs={12}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#FCD19C', mb: 2, textDecoration: 'underline' }}>
-            {title}
-        </Typography>
+    <div className="space-y-4">
+        <h3 className="text-2xl font-bold text-orange-200 underline">{title}</h3>
         {children}
-    </Grid>
+    </div>
 );
 
-const CustomTextField = ({ label, placeholder, value, onChange }) => (
-    <TextField
-        fullWidth
-        variant="outlined"
-        label={label}
-        placeholder={placeholder}
-        multiline
-        rows={2}
-        margin="normal"
-        value={value}
-        onChange={onChange}
-        sx={{
-            backgroundColor: '#333',
-            color: '#FCD19C', 
-            '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                    borderColor: '#FCD19C', 
-                },
-                '&:hover fieldset': {
-                    borderColor: '#fff', 
-                },
-                '&.Mui-focused fieldset': {
-                    borderColor: '#fff', 
-                },
-                '& .MuiInputBase-input': {
-                    color: '#fff', 
-                },
-                '& .MuiInputBase-input::placeholder': {
-                    color: '#fff', 
-                },
-            },
-            '& .MuiInputLabel-root': {
-                color: '#FCD19C', 
-            },
-            '& .MuiInputLabel-root.Mui-focused': {
-                color: '#FCD19C', 
-            },
-        }}
-    />
+const CustomInput = ({ label, ...props }) => (
+    <div className="space-y-2">
+        <Label htmlFor={props.name} className="text-orange-200">{label}</Label>
+        <Input id={props.name} className="bg-gray-700 text-white border-orange-200" {...props} />
+    </div>
 );
