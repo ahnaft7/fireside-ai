@@ -1,6 +1,3 @@
-const dotenv = require('dotenv');
-dotenv.config();
-
 const { createServer } = require('http');
 const next = require('next');
 const WebSocket = require('ws');
@@ -12,10 +9,14 @@ const path = require('path');
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
+const dotenv = require('dotenv');
 
+dotenv.config();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const WS_PORT = 3001;
+
+
 
 app.prepare().then(() => {
   const server = createServer((req, res) => {
