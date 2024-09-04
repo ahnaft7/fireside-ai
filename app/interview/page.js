@@ -18,11 +18,11 @@ export default function Interview() {
 //     }
 //   }, [status, router])
 
-  if (!isReady) return <p>Loading...</p>
+//   if (!isReady) return <p>Loading...</p>
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Mock Interview Session</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Mock Interview Session</h1>
       {/* <InterviewSession /> */}
     </div>
   )
