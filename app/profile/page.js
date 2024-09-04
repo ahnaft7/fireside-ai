@@ -262,6 +262,7 @@ export default function Profile() {
                                     </DialogHeader>
                                     <form onSubmit={(event) => {
                                         event.preventDefault();
+                                        event.stopPropagation(); // Prevent the event from bubbling up to parent forms
                                         const formData = new FormData(event.currentTarget);
                                         const formJson = Object.fromEntries(formData.entries());
                                         addExperience(formJson);
