@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button"; // Assuming you're using Shadcn buttons
 
 const InterviewInterface = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
+  const [timer, setTimer] = useState(0); // State to track elapsed time
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
 
@@ -30,6 +31,7 @@ const InterviewInterface = () => {
     setIsStarted(false);
     setIsVideoOn(false);
     setIsMicOn(false);
+    setTimer(0); // Reset the timer
   };
 
   // Function to toggle the video stream on/off
@@ -50,12 +52,31 @@ const InterviewInterface = () => {
     }
   };
 
+  // Timer effect
+  useEffect(() => {
+    let interval = null;
+    if (isStarted) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev + 1);
+      }, 1000); // Update every second
+    } else {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [isStarted]);
+
+  // Format timer as MM:SS
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
-      {/* Video Container */}
-      <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg border border-gray-800">
+      <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg">
         {/* AI Interviewer's Video */}
-        <div className="w-full h-full relative">
+        <div className="w-full h-full bg-black mb-4 relative">
           <video
             className="w-full h-full object-cover"
             autoPlay
@@ -67,47 +88,40 @@ const InterviewInterface = () => {
 
         {/* User's Video (bottom right corner) */}
         <div className="absolute bottom-4 right-4 w-1/4 h-1/4 bg-gray-800 border border-gray-600 rounded-md overflow-hidden shadow-md">
-          <video
-            ref={userVideoRef}
-            autoPlay
-            muted
-            className="w-full h-full object-cover"
-          />
+            <video
+                ref={userVideoRef}
+                autoPlay
+                muted
+                className="w-full h-full object-cover"
+            />
         </div>
       </div>
 
+      {/* Timer Display */}
+      {isStarted && (
+        <div className="mt-4 text-white text-xl font-semibold">
+          Call Duration: {formatTime(timer)}
+        </div>
+      )}
+
       {/* Control Buttons */}
       <div className="flex flex-col md:flex-row items-center justify-center mt-4 space-y-2 md:space-y-0 md:space-x-4">
-        <Button
-          onClick={startInterview}
-          disabled={isStarted}
-          className="bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-300"
-        >
+        <Button onClick={startInterview} disabled={isStarted} className="bg-blue-500 text-white hover:bg-blue-600">
           Start Call
         </Button>
-        <Button
-          onClick={endInterview}
-          disabled={!isStarted}
-          className="bg-red-500 text-white hover:bg-red-600 transition-colors duration-300"
-        >
+        <Button onClick={endInterview} disabled={!isStarted} className="bg-red-500 text-white hover:bg-red-600">
           End Call
         </Button>
         {isStarted && (
           <>
-            <Button
-              onClick={toggleVideo}
-              className={`${
-                isVideoOn ? "bg-gray-500" : "bg-green-500"
-              } text-white hover:bg-gray-600 transition-colors duration-300`}
-            >
+            <Button onClick={toggleVideo} className={`${
+              isVideoOn ? "bg-gray-500" : "bg-green-500"
+              } text-white hover:bg-gray-600`}>
               {isVideoOn ? "Turn Off Video" : "Turn On Video"}
             </Button>
-            <Button
-              onClick={toggleMic}
-              className={`${
-                isMicOn ? "bg-gray-500" : "bg-green-500"
-              } text-white hover:bg-gray-600 transition-colors duration-300`}
-            >
+            <Button onClick={toggleMic} className={`${
+              isMicOn ? "bg-gray-500" : "bg-green-500"
+              } text-white hover:bg-gray-600`}>
               {isMicOn ? "Mute Mic" : "Unmute Mic"}
             </Button>
           </>
