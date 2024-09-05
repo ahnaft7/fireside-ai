@@ -1,29 +1,28 @@
 'use client'
-
 import { useState, useEffect } from 'react'
-// import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-// import InterviewSession from '@/components/InterviewSession'
+import dynamic from 'next/dynamic'
 
-export default function Interview() {
-//   const { data: session, status } = useSession()
+const InterviewInterface = dynamic(() => import('@/app/components/InterviewInterface'), {
+  ssr: false,
+})
+
+const Interview = () => {
   const router = useRouter()
   const [isReady, setIsReady] = useState(false)
 
-//   useEffect(() => {
-//     if (status === 'unauthenticated') {
-//       router.push('/api/auth/signin')
-//     } else if (status === 'authenticated') {
-//       setIsReady(true)
-//     }
-//   }, [status, router])
+  useEffect(() => {
+    setIsReady(true)
+  }, [])
 
-//   if (!isReady) return <p>Loading...</p>
+  if (!isReady) return <p>Loading...</p>
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4 text-center">Mock Interview Session</h1>
-      {/* <InterviewSession /> */}
+      <InterviewInterface />
     </div>
   )
 }
+
+export default Interview
