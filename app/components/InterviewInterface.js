@@ -51,45 +51,53 @@ const InterviewInterface = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen relative">
-      {/* AI Interviewer's Video */}
-      <div className="w-full h-auto max-w-3xl bg-black mb-4 relative">
-        <video
-          className="w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          src="/path-to-ai-interviewer-video.mp4" // Placeholder video for AI interviewer
-        />
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+        <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg">
+            {/* AI Interviewer's Video */}
+            <div className="w-full h-auto max-w-3xl bg-black mb-4 relative">
+                <video
+                className="w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                src="/path-to-ai-interviewer-video.mp4" // Placeholder video for AI interviewer
+                />
+            </div>
 
-      {/* User's Video (bottom right corner) */}
-      <div className="absolute bottom-5 right-5 w-40 h-30 border border-gray-300 rounded-md overflow-hidden">
-        <video
-          ref={userVideoRef}
-          autoPlay
-          muted
-          className="w-full h-full object-cover"
-        />
-      </div>
+            {/* User's Video (bottom right corner) */}
+            <div className="absolute bottom-4 right-4 w-1/4 h-1/4 bg-gray-800 border border-gray-600 rounded-md overflow-hidden shadow-md">
+                <video
+                ref={userVideoRef}
+                autoPlay
+                muted
+                className="w-full h-full object-cover"
+                />
+            </div>
+        </div>
 
-      <div className="controls flex space-x-4 mt-4">
-        {!isStarted ? (
-          <Button onClick={startInterview}>Start Call</Button>
-        ) : (
-          <Button onClick={endInterview}>End Call</Button>
-        )}
-        {isStarted && (
-          <>
-            <Button onClick={toggleVideo}>
-              {isVideoOn ? "Turn Off Video" : "Turn On Video"}
+        {/* Control Buttons */}
+        <div className="flex flex-col md:flex-row items-center justify-center mt-4 space-y-2 md:space-y-0 md:space-x-4">
+            <Button onClick={startInterview} disabled={isStarted} className="bg-blue-500 text-white hover:bg-blue-600">
+            Start Call
             </Button>
-            <Button onClick={toggleMic}>
-              {isMicOn ? "Mute Mic" : "Unmute Mic"}
+            <Button onClick={endInterview} disabled={!isStarted} className="bg-red-500 text-white hover:bg-red-600">
+            End Call
             </Button>
-          </>
-        )}
-      </div>
+            {isStarted && (
+            <>
+                <Button onClick={toggleVideo} className={`${
+                isVideoOn ? "bg-gray-500" : "bg-green-500"
+                } text-white hover:bg-gray-600`}>
+                {isVideoOn ? "Turn Off Video" : "Turn On Video"}
+                </Button>
+                <Button onClick={toggleMic} className={`${
+                isMicOn ? "bg-gray-500" : "bg-green-500"
+                } text-white hover:bg-gray-600`}>
+                {isMicOn ? "Mute Mic" : "Unmute Mic"}
+                </Button>
+            </>
+            )}
+        </div>
     </div>
   );
 };
