@@ -5,7 +5,7 @@ const InterviewInterface = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
-  const videoRef = useRef(null);
+  const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
 
   // Function to start the interview session
@@ -15,7 +15,7 @@ const InterviewInterface = () => {
         video: true,
         audio: true,
       });
-      videoRef.current.srcObject = stream;
+      userVideoRef.current.srcObject = stream;
       streamRef.current = stream;
       setIsStarted(true);
       setIsVideoOn(true);
@@ -26,7 +26,7 @@ const InterviewInterface = () => {
 
   // Function to end the interview session
   const endInterview = () => {
-    streamRef.current.getTracks().forEach(track => track.stop()); // Stop all media tracks
+    streamRef.current.getTracks().forEach((track) => track.stop()); // Stop all media tracks
     setIsStarted(false);
     setIsVideoOn(false);
     setIsMicOn(false);
@@ -51,17 +51,29 @@ const InterviewInterface = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className="video-container">
+    <div className="flex flex-col items-center justify-center min-h-screen relative">
+      {/* AI Interviewer's Video */}
+      <div className="w-full h-auto max-w-3xl bg-black mb-4 relative">
         <video
-          ref={videoRef}
+          className="w-full h-full object-cover"
           autoPlay
-          className="rounded-md border border-gray-300 w-full max-w-md h-auto mb-4"
-          muted // This mutes the video output so the user doesn't hear themselves
+          muted
+          loop
+          src="/path-to-ai-interviewer-video.mp4" // Placeholder video for AI interviewer
         />
       </div>
 
-      <div className="controls flex space-x-4">
+      {/* User's Video (bottom right corner) */}
+      <div className="absolute bottom-5 right-5 w-40 h-30 border border-gray-300 rounded-md overflow-hidden">
+        <video
+          ref={userVideoRef}
+          autoPlay
+          muted
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      <div className="controls flex space-x-4 mt-4">
         {!isStarted ? (
           <Button onClick={startInterview}>Start Call</Button>
         ) : (
