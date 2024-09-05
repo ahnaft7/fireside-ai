@@ -6,15 +6,35 @@ const InterviewInterface = () => {
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
   const [timer, setTimer] = useState(0); // State to track elapsed time
+  const [videoDevices, setVideoDevices] = useState([]); // List of video devices
+  const [audioDevices, setAudioDevices] = useState([]); // List of audio devices
+  const [selectedVideoDevice, setSelectedVideoDevice] = useState(""); // Selected video device
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState(""); // Selected audio device
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
+
+  // Function to fetch available devices
+  const fetchDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      setVideoDevices(devices.filter(device => device.kind === 'videoinput'));
+      setAudioDevices(devices.filter(device => device.kind === 'audioinput'));
+    } catch (err) {
+      console.error("Error fetching media devices:", err);
+    }
+  };
+
+  // Fetch devices on component mount
+  useEffect(() => {
+    fetchDevices();
+  }, []);
 
   // Function to start the interview session
   const startInterview = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
+        video: selectedVideoDevice ? { deviceId: selectedVideoDevice } : true,
+        audio: selectedAudioDevice ? { deviceId: selectedAudioDevice } : true,
       });
       userVideoRef.current.srcObject = stream;
       streamRef.current = stream;
@@ -32,6 +52,60 @@ const InterviewInterface = () => {
     setIsVideoOn(false);
     setIsMicOn(false);
     setTimer(0); // Reset the timer
+  };
+
+  // Function to switch camera
+  const switchCamera = async (newDeviceId) => {
+    try {
+      const stream = streamRef.current;
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: newDeviceId ? { deviceId: newDeviceId } : true,
+        audio: selectedAudioDevice ? { deviceId: selectedAudioDevice } : true,
+      });
+
+      // Replace the video track in the current stream
+      const videoTrack = newStream.getVideoTracks()[0];
+      const oldVideoTrack = stream.getVideoTracks()[0];
+
+      // Replace the old track with the new track
+      stream.removeTrack(oldVideoTrack);
+      stream.addTrack(videoTrack);
+
+      // Update the video element source
+      userVideoRef.current.srcObject = stream;
+
+      // Update the selected device
+      setSelectedVideoDevice(newDeviceId);
+    } catch (err) {
+      console.error("Error switching camera:", err);
+    }
+  };
+
+  // Function to switch microphone
+  const switchMic = async (newDeviceId) => {
+    try {
+      const stream = streamRef.current;
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: selectedVideoDevice ? { deviceId: selectedVideoDevice } : true,
+        audio: newDeviceId ? { deviceId: newDeviceId } : true,
+      });
+
+      // Replace the audio track in the current stream
+      const audioTrack = newStream.getAudioTracks()[0];
+      const oldAudioTrack = stream.getAudioTracks()[0];
+
+      // Replace the old track with the new track
+      stream.removeTrack(oldAudioTrack);
+      stream.addTrack(audioTrack);
+
+      // Update the video element source
+      userVideoRef.current.srcObject = stream;
+
+      // Update the selected device
+      setSelectedAudioDevice(newDeviceId);
+    } catch (err) {
+      console.error("Error switching microphone:", err);
+    }
   };
 
   // Function to toggle the video stream on/off
@@ -103,6 +177,40 @@ const InterviewInterface = () => {
           Call Duration: {formatTime(timer)}
         </div>
       )}
+
+      {/* Device Selection Dropdowns */}
+      <div className="mt-4 space-y-2">
+        <div className="flex items-center space-x-2">
+          <label className="text-white">Select Camera:</label>
+          <select
+            value={selectedVideoDevice}
+            onChange={(e) => switchCamera(e.target.value)}
+            className="p-2 rounded bg-gray-800 text-white"
+          >
+            <option value="">Default Camera</option>
+            {videoDevices.map((device) => (
+              <option key={device.deviceId} value={device.deviceId}>
+                {device.label || `Camera ${videoDevices.indexOf(device) + 1}`}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center space-x-2">
+          <label className="text-white">Select Microphone:</label>
+          <select
+            value={selectedAudioDevice}
+            onChange={(e) => switchMic(e.target.value)}
+            className="p-2 rounded bg-gray-800 text-white"
+          >
+            <option value="">Default Microphone</option>
+            {audioDevices.map((device) => (
+              <option key={device.deviceId} value={device.deviceId}>
+                {device.label || `Microphone ${audioDevices.indexOf(device) + 1}`}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Control Buttons */}
       <div className="flex flex-col md:flex-row items-center justify-center mt-4 space-y-2 md:space-y-0 md:space-x-4">
