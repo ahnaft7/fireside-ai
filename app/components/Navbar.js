@@ -47,10 +47,14 @@ export default function Navbar() {
           </nav>
           <SignedOut>
             <div className="flex items-center gap-4">
+              <Link href="/sign-in" passHref>
                 <Button variant="outline" size="sm">
-                Sign in
+                  Sign in
                 </Button>
+              </Link>
+              <Link href="/sign-up" passHref>
                 <Button size="sm">Sign up</Button>
+              </Link>
             </div>
           </SignedOut>
           <SignedIn>
