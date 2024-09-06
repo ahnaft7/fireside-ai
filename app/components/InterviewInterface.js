@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button"; // Assuming you're using Shadcn buttons
+import { useRecordVoice } from "@/app/hooks/useRecordVoice"; // Import the hook
 
 const InterviewInterface = () => {
   const [isStarted, setIsStarted] = useState(false);
@@ -12,6 +13,7 @@ const InterviewInterface = () => {
   const [selectedAudioDevice, setSelectedAudioDevice] = useState(""); // Selected audio device
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
+  const { recording, toggleRecording, text, response } = useRecordVoice();
 
   // Function to fetch available devices
   const fetchDevices = async () => {
@@ -40,6 +42,7 @@ const InterviewInterface = () => {
       streamRef.current = stream;
       setIsStarted(true);
       setIsVideoOn(true);
+      if (!recording) toggleRecording(); // Start recording when the interview starts
     } catch (err) {
       console.error("Error accessing media devices:", err);
     }
@@ -51,6 +54,7 @@ const InterviewInterface = () => {
     setIsStarted(false);
     setIsVideoOn(false);
     setIsMicOn(false);
+    if (recording) toggleRecording(); // Stop recording when the interview ends
     setTimer(0); // Reset the timer
   };
 
@@ -119,10 +123,17 @@ const InterviewInterface = () => {
 
   // Function to toggle the microphone on/off
   const toggleMic = () => {
-    const audioTrack = streamRef.current.getAudioTracks()[0];
+    const audioTrack = streamRef.current?.getAudioTracks()[0];
     if (audioTrack) {
       audioTrack.enabled = !audioTrack.enabled;
       setIsMicOn(audioTrack.enabled);
+  
+      // Also, pause or resume the recording based on the mic state
+      if (audioTrack.enabled) {
+        if (!recording) toggleRecording(); // Resume recording when the mic is on
+      } else {
+        if (recording) toggleRecording(); // Pause/Stop recording when the mic is off
+      }
     }
   };
 
@@ -234,6 +245,14 @@ const InterviewInterface = () => {
             </Button>
           </>
         )}
+      </div>
+
+      {/* Display Transcription and LLM Response */}
+      <div className="mt-4 text-white">
+        <h3 className="text-lg font-semibold">Transcription:</h3>
+        <p>{text}</p>
+        <h3 className="text-lg font-semibold mt-2">LLM Response:</h3>
+        <p>{response}</p>
       </div>
     </div>
   );
