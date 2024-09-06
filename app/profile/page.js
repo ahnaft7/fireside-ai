@@ -77,7 +77,7 @@ export default function Profile() {
 
     if (!isLoaded || !isSignedIn) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-orange-200 text-center">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-orange-200 text-center" style={{ backgroundColor: "#2A2A2A" }}>
                 <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-orange-200"></div>
                 <h2 className="mt-4 text-xl">Loading your profile...</h2>
             </div>
@@ -203,8 +203,8 @@ export default function Profile() {
     
 
     return (
-        <div className="container mx-auto p-4 bg-gray-900 min-h-screen">
-            <Card className="mt-4 bg-gray-800">
+        <div className="container mx-auto p-4 bg-gray-900 min-h-screen" style={{ backgroundColor: "#2A2A2A" }}>
+            <Card className="mt-4 bg-gray-800" style={{ backgroundColor: "#2A2A2A" }}>
                 <CardHeader>
                     <CardTitle className="text-4xl font-bold text-center text-orange-200">Your Profile</CardTitle>
                 </CardHeader>

@@ -56,6 +56,7 @@ export default function RootLayout({ children }) {
                   </Link>
                   <NavigationMenuTrigger>Pages</NavigationMenuTrigger>
                   <NavigationMenuContent>
+                    {/* <NavigationMenuViewport>Home page</NavigationMenuViewport> */}
                     <Link href="/" legacyBehavior passHref>
                       <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Home

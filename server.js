@@ -5,7 +5,7 @@ const Groq = require('groq-sdk');
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.resolve(__dirname, '.env.local') });
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
