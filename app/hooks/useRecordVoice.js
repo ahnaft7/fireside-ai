@@ -7,42 +7,24 @@ export const useRecordVoice = () => {
   const [recording, setRecording] = useState(false);
   const mediaRecorder = useRef(null);
   const websocket = useRef(null);
-
+  const audioContext = useRef(null);
+  const analyser = useRef(null);
+  const microphone = useRef(null);
+  const silenceTimer = useRef(null);
+  const audioChunks = useRef([]); // Store all audio chunks in this array
+  const silenceThreshold = 0.01; // Adjust this value to fine-tune silence detection
+  const silenceDelay = 3000; // Time in milliseconds before stopping after silence is detected
+  
   useEffect(() => {
-    const wsUrl = process.env.NODE_ENV === 'production' 
-      ? 'wss://murmuring-brook-70982-594f2df149b8.herokuapp.com'
-      : 'ws://localhost:3001';
-
-    console.log('WebSocket URL:', wsUrl);
-    websocket.current = new WebSocket(wsUrl);
-
-    websocket.current.onopen = () => {
-      console.log('WebSocket connection opened');
-    };
+    websocket.current = new WebSocket('ws://localhost:3001');
 
     websocket.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'transcription') {
-          setText(data.text);
-        } else if (data.type === 'llmResponse') {
-          setResponse(data.response);
-        }
-      } catch (error) {
-        console.error('Error processing WebSocket message:', error);
+      const data = JSON.parse(event.data);
+      if (data.type === 'transcription') {
+        setText(data.text);
+      } else if (data.type === 'llmResponse') {
+        setResponse(data.response);
       }
-    };
-
-    websocket.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    websocket.current.onclose = (event) => {
-      console.log('WebSocket connection closed:', event);
-      // Attempt to reconnect after a delay if desired
-      setTimeout(() => {
-        websocket.current = new WebSocket(wsUrl);
-      }, 3000);
     };
 
     return () => {
@@ -56,31 +38,94 @@ export const useRecordVoice = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      
+      // Set up AudioContext for volume monitoring
+      audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyser.current = audioContext.current.createAnalyser();
+      microphone.current = audioContext.current.createMediaStreamSource(stream);
+      microphone.current.connect(analyser.current);
 
       mediaRecorder.current.ondataavailable = (event) => {
-        if (event.data.size > 0 && websocket.current.readyState === WebSocket.OPEN) {
-          websocket.current.send(event.data);
+        if (event.data.size > 0) {
+          audioChunks.current.push(event.data); // Accumulate all audio chunks
         }
       };
 
-      mediaRecorder.current.onerror = (error) => {
-        console.error('MediaRecorder error:', error);
-      };
-
-      mediaRecorder.current.start(1000); // Send audio data every 1 second
+      mediaRecorder.current.start(); // Start recording continuously
       setRecording(true);
+      monitorVolume(); // Start monitoring the volume for silence detection
     } catch (error) {
       console.error('Error starting recording:', error);
     }
   };
 
+  const monitorVolume = () => {
+    const dataArray = new Uint8Array(analyser.current.fftSize);
+
+    const checkVolume = () => {
+      analyser.current.getByteFrequencyData(dataArray);
+
+      let maxVolume = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        maxVolume = Math.max(maxVolume, dataArray[i]);
+      }
+
+      const normalizedVolume = maxVolume / 256; // Normalize volume to 0-1 range
+      console.log(`Normalized Volume: ${normalizedVolume}`);
+
+      if (normalizedVolume < silenceThreshold) {
+        if (!silenceTimer.current) {
+          silenceTimer.current = setTimeout(stopRecording, silenceDelay); // Start timer to stop after silence
+        }
+      } else {
+        clearTimeout(silenceTimer.current); // If speaking resumes, cancel the stop
+        silenceTimer.current = null;
+      }
+
+      requestAnimationFrame(checkVolume); // Continuously check the volume
+    };
+
+    checkVolume();
+  };
+  
   const stopRecording = () => {
     if (mediaRecorder.current && recording) {
-      mediaRecorder.current.stop();
+      mediaRecorder.current.stop(); // Stop the media recorder
       setRecording(false);
+
+      // Stop all tracks on the stream
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+      
+      if (audioContext.current) {
+        audioContext.current.close();
+      }
+      
+      // Once recording is stopped, process the accumulated audio chunks
+      const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+      sendAudioFile(audioBlob);
+
+      console.log("Stopped recording due to silence.");
     }
   };
+
+  const sendAudioFile = (audioBlob) => {
+    // Ensure the audioBlob is in the correct format (webm, wav, etc.)
+    const fileType = audioBlob.type;
+  
+    if (fileType !== "audio/webm" && fileType !== "audio/wav") {
+      console.error("Unsupported audio format. Please use webm or wav.");
+      return;
+    }
+  
+    if (websocket.current && websocket.current.readyState === WebSocket.OPEN) {
+      websocket.current.send(audioBlob); // Send the combined audio file
+    }
+  
+    // Clear the audioChunks after sending the file
+    audioChunks.current = [];
+  };
+  
+  
 
   const toggleRecording = async () => {
     if (recording) {
