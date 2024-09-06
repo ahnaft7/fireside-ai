@@ -5,12 +5,13 @@ const Groq = require('groq-sdk');
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
+require('dotenv').config();
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const groq = new Groq({ apiKey: "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" });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const WS_PORT = 3001;
 
