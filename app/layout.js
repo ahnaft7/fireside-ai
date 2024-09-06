@@ -35,26 +35,10 @@ export default function RootLayout({ children }) {
               {children}
             </main>
           </AuthProvider> */}
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <Link href="/" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Home
-                  </NavigationMenuLink>
-                </Link>
-                <Link href="/interview" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Interview
-                  </NavigationMenuLink>
-                </Link>
-                <Link href="/profile" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Profile
-                  </NavigationMenuLink>
-                </Link>
-                <NavigationMenuTrigger>Pages</NavigationMenuTrigger>
-                <NavigationMenuContent>
+          <div className="flex justify-center w-full py-2">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
                   <Link href="/" legacyBehavior passHref>
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                       Home
@@ -70,26 +54,46 @@ export default function RootLayout({ children }) {
                       Profile
                     </NavigationMenuLink>
                   </Link>
-                </NavigationMenuContent>
-                <SignedOut>
-                  <Link href="/sign-in" legacyBehavior passHref>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Sign In
-                    </NavigationMenuLink>
-                  </Link>
-                  <Link href="/sign-up" legacyBehavior passHref>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Sign Up
-                    </NavigationMenuLink>
-                  </Link>
-                </SignedOut>
-                <SignedIn>
-                    <UserButton />
-                </SignedIn>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+                  <NavigationMenuTrigger>Pages</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <Link href="/" legacyBehavior passHref>
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Home
+                      </NavigationMenuLink>
+                    </Link>
+                    <Link href="/interview" legacyBehavior passHref>
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Interview
+                      </NavigationMenuLink>
+                    </Link>
+                    <Link href="/profile" legacyBehavior passHref>
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Profile
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuContent>
+                  <SignedOut>
+                    <Link href="/sign-in" legacyBehavior passHref>
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Sign In
+                      </NavigationMenuLink>
+                    </Link>
+                    <Link href="/sign-up" legacyBehavior passHref>
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                        Sign Up
+                      </NavigationMenuLink>
+                    </Link>
+                  </SignedOut>
+                  <SignedIn>
+                      <UserButton />
+                  </SignedIn>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+          <main className="container mx-auto py-4">
             {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>

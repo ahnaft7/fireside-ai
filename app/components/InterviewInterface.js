@@ -168,7 +168,7 @@ const InterviewInterface = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4" style={{ backgroundColor: "#2A2A2A" }}>
       <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
         {/* Pulse Wave Effects (conditionally rendered based on aiSpeaking) */}
         {aiSpeaking && (
@@ -197,7 +197,7 @@ const InterviewInterface = () => {
         </div>
 
         {/* User's Video (bottom right corner) */}
-        <div className="absolute bottom-4 right-4 w-1/4 h-1/4 bg-gray-800 border border-gray-600 rounded-md overflow-hidden shadow-md">
+        <div className="absolute bottom-4 right-4 w-1/4 h-1/4 bg-gray-800 border border-gray-600 rounded-md overflow-hidden shadow-md" style={{ backgroundColor: "#333333" }}>
             <video
                 ref={userVideoRef}
                 autoPlay
@@ -221,7 +221,7 @@ const InterviewInterface = () => {
           <select
             value={selectedVideoDevice}
             onChange={(e) => switchCamera(e.target.value)}
-            className="p-2 rounded bg-gray-800 text-white"
+            className="p-2 rounded bg-gray-800 text-white" style={{ backgroundColor: "#333333" }}
           >
             <option value="">Default Camera</option>
             {videoDevices.map((device) => (
@@ -236,7 +236,7 @@ const InterviewInterface = () => {
           <select
             value={selectedAudioDevice}
             onChange={(e) => switchMic(e.target.value)}
-            className="p-2 rounded bg-gray-800 text-white"
+            className="p-2 rounded bg-gray-800 text-white" style={{ backgroundColor: "#333333" }}
           >
             <option value="">Default Microphone</option>
             {audioDevices.map((device) => (
