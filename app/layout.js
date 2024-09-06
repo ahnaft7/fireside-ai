@@ -2,7 +2,7 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
 // import { AuthProvider } from './providers'
-// import Navbar from '@/components/Navbar'
+import Navbar from '@/app/components/Navbar'
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
               {children}
             </main>
           </AuthProvider> */}
-          <div className="flex justify-center w-full py-2">
+          {/* <div className="flex justify-center w-full py-2">
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
@@ -56,7 +56,6 @@ export default function RootLayout({ children }) {
                   </Link>
                   <NavigationMenuTrigger>Pages</NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    {/* <NavigationMenuViewport>Home page</NavigationMenuViewport> */}
                     <Link href="/" legacyBehavior passHref>
                       <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                         Home
@@ -91,7 +90,8 @@ export default function RootLayout({ children }) {
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
-          </div>
+          </div> */}
+          <Navbar />
           <main className="container mx-auto py-4">
             {children}
           </main>
