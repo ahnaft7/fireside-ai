@@ -6,6 +6,7 @@ const InterviewInterface = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(true);
+  const [aiSpeaking, setAiSpeaking] = useState(false); // State for AI speaking animation
   const [timer, setTimer] = useState(0); // State to track elapsed time
   const [videoDevices, setVideoDevices] = useState([]); // List of video devices
   const [audioDevices, setAudioDevices] = useState([]); // List of audio devices
@@ -14,6 +15,15 @@ const InterviewInterface = () => {
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
   const { recording, toggleRecording, text, response } = useRecordVoice();
+
+  useEffect(() => {
+    if (response) {
+      setAiSpeaking(true); // AI starts "speaking"
+      // Set a timeout to stop animation after a while (e.g., 3 seconds after the response)
+      const timeout = setTimeout(() => setAiSpeaking(false), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [response]);
 
   // Function to fetch available devices
   const fetchDevices = async () => {
@@ -159,15 +169,22 @@ const InterviewInterface = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
-      <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg">
+      <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
         {/* AI Interviewer's Video */}
-        <div className="w-full h-full bg-black mb-4 relative">
+        {/* <div className="w-full h-full bg-black mb-4 relative">
           <video
             className="w-full h-full object-cover"
             autoPlay
             muted
             loop
             src="/path-to-ai-interviewer-video.mp4" // Placeholder video for AI interviewer
+          />
+        </div> */}
+        <div className="w-full h-auto max-w-3xl flex items-center justify-center">
+          <img
+            src="/fireside_logo.png" // Placeholder for AI interviewer logo
+            alt="AI Interviewer"
+            className={`w-40 h-40 object-contain ${aiSpeaking ? "animate-sound" : ""}`}
           />
         </div>
 
