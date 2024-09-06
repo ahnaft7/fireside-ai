@@ -170,6 +170,14 @@ const InterviewInterface = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
       <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
+        {/* Pulse Wave Effects (conditionally rendered based on aiSpeaking) */}
+        {aiSpeaking && (
+          <div className="absolute flex items-center justify-center">
+            <div className="pulse-wave"></div>
+            <div className="pulse-wave"></div>
+            <div className="pulse-wave"></div>
+          </div>
+        )}
         {/* AI Interviewer's Video */}
         {/* <div className="w-full h-full bg-black mb-4 relative">
           <video
