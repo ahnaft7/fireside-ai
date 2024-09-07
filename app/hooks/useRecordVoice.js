@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 const SILENCE_THRESHOLD = -50; // dB
 const SILENCE_DURATION = 3000; // 3 seconds
@@ -15,6 +15,7 @@ export const useRecordVoice = () => {
   const silenceStart = useRef(null);
   const rafId = useRef(null);
   const audioChunks = useRef([]);
+  const isRecording = useRef(false);
 
   useEffect(() => {
     const wsUrl = process.env.NODE_ENV === 'production' 
@@ -40,6 +41,8 @@ export const useRecordVoice = () => {
   }, []);
 
   const detectSilence = () => {
+    if (!isRecording.current) return;
+
     const dataArray = new Uint8Array(analyser.current.frequencyBinCount);
     analyser.current.getByteFrequencyData(dataArray);
 
@@ -68,7 +71,7 @@ export const useRecordVoice = () => {
     rafId.current = requestAnimationFrame(detectSilence);
   };
 
-  const startRecording = async () => {
+  const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
@@ -94,6 +97,7 @@ export const useRecordVoice = () => {
 
       mediaRecorder.current.start(1000); // Send audio data every 1 second
       console.log("recording state before recording set to true in startRecording: ", recording)
+      isRecording.current = true;
       setRecording(true); // this is not setting recording to true for some reason??????????????????
       console.log("recording state after recording set to true in startRecording: ", recording)
       silenceStart.current = null;
@@ -101,15 +105,17 @@ export const useRecordVoice = () => {
     } catch (error) {
       console.error('Error starting recording:', error);
     }
-  };
+  }, [detectSilence]);
 
-  const stopRecording = () => {
+  const stopRecording = useCallback(() => {
     console.log("Entered stop Recording function")
     console.log("recording state entering stopRecording: ", recording)
-    if (mediaRecorder.current && recording) {
+    console.log("mediaRecorder status: ", mediaRecorder.current)
+    if (mediaRecorder.current && isRecording.current) {
       console.log("mediaRecorder.current and recording")
       console.log("recording state before turning off: ", recording)
       mediaRecorder.current.stop();
+      isRecording.current = false;
       setRecording(false);
       console.log("recording state after turning off: ", recording)
       // Stop all tracks on the stream
@@ -117,15 +123,19 @@ export const useRecordVoice = () => {
       cancelAnimationFrame(rafId.current);
       silenceStart.current = null;
     }
-  };
+  }, []);
 
-  const toggleRecording = async () => {
-    if (recording) {
+  const toggleRecording = useCallback(async () => {
+    if (isRecording.current) {
       stopRecording();
     } else {
       await startRecording();
     }
-  };
+  }, [startRecording, stopRecording]);
+
+  useEffect(() => {
+    console.log("Recording state changed:", recording);
+  }, [recording]);
 
   return { recording, toggleRecording, text, response };
 };

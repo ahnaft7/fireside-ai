@@ -108,7 +108,9 @@ const InterviewInterface = () => {
       streamRef.current = stream;
       setIsStarted(true);
       setIsVideoOn(true);
+      console.log("recording state in startInterview before toggleRecording: ", recording)
       if (!recording) toggleRecording(); // Start recording when the interview starts
+      console.log("recording state in startInterview after toggleRecording: ", recording)
     } catch (err) {
       console.error("Error accessing media devices:", err);
     }
