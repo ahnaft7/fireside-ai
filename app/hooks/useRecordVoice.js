@@ -12,8 +12,8 @@ export const useRecordVoice = () => {
   const microphone = useRef(null);
   const silenceTimer = useRef(null);
   const audioChunks = useRef([]); // Store all audio chunks in this array
-  const silenceThreshold = 0.01; // Adjust this value to fine-tune silence detection
-  const silenceDelay = 3000; // Time in milliseconds before stopping after silence is detected
+  const silenceThreshold = 0.4; // Adjust this value to fine-tune silence detection
+  const silenceDelay = 300; // Time in milliseconds before stopping after silence is detected
   
   useEffect(() => {
     websocket.current = new WebSocket('ws://localhost:3001');
@@ -74,14 +74,31 @@ export const useRecordVoice = () => {
       console.log(`Normalized Volume: ${normalizedVolume}`);
 
       if (normalizedVolume < silenceThreshold) {
+        console.log('Silence detected');
+        
         if (!silenceTimer.current) {
-          silenceTimer.current = setTimeout(stopRecording, silenceDelay); // Start timer to stop after silence
+          // Set silenceTimer to track the silence delay countdown
+          silenceTimer.current = Date.now();
+          console.log("Starting silence timer");
+        } else {
+          // Check if the silence period has lasted for the silenceDelay
+          const elapsedTime = Date.now() - silenceTimer.current;
+          console.log(`Elapsed silence time: ${elapsedTime}`);
+  
+          if (elapsedTime >= silenceDelay) {
+            console.log("Silence period reached threshold, stopping recording.");
+            stopRecording();  // Trigger stopRecording after the silenceDelay has passed
+            silenceTimer.current = null; // Reset the silence timer
+          }
         }
       } else {
-        clearTimeout(silenceTimer.current); // If speaking resumes, cancel the stop
-        silenceTimer.current = null;
+        // Reset the silence timer if noise is detected
+        if (silenceTimer.current) {
+          console.log('Noise detected, resetting silence timer');
+          silenceTimer.current = null;
+        }
       }
-
+  
       requestAnimationFrame(checkVolume); // Continuously check the volume
     };
 
@@ -129,6 +146,7 @@ export const useRecordVoice = () => {
 
   const toggleRecording = async () => {
     if (recording) {
+
       stopRecording();
     } else {
       await startRecording();
