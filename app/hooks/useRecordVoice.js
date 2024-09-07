@@ -137,5 +137,5 @@ export const useRecordVoice = () => {
     console.log("Recording state changed:", recording);
   }, [recording]);
 
-  return { recording, toggleRecording, text, response };
+  return { isRecording, recording, toggleRecording, text, response };
 };

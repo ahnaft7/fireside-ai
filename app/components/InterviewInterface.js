@@ -21,7 +21,7 @@ const InterviewInterface = () => {
   const { user } = useUser();
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
-  const { recording, toggleRecording, text, response } = useRecordVoice();
+  const { isRecording, recording, toggleRecording, text, response } = useRecordVoice();
 
   const lastTextRef = useRef("");
   const lastResponseRef = useRef("");
@@ -109,7 +109,7 @@ const InterviewInterface = () => {
       setIsStarted(true);
       setIsVideoOn(true);
       console.log("recording state in startInterview before toggleRecording: ", recording)
-      if (!recording) toggleRecording(); // Start recording when the interview starts
+      if (!isRecording.current) toggleRecording(); // Start recording when the interview starts
       console.log("recording state in startInterview after toggleRecording: ", recording)
     } catch (err) {
       console.error("Error accessing media devices:", err);
@@ -145,9 +145,15 @@ const InterviewInterface = () => {
   const endInterview = async () => {
     streamRef.current.getTracks().forEach((track) => track.stop());
     setIsStarted(false);
+    console.log("isStarted state: ", isStarted)
     setIsVideoOn(false);
+    console.log("isVideoOn state: ", isVideoOn)
     setIsMicOn(false);
-    if (recording) toggleRecording();
+    console.log("isMicOn state: ", isMicOn)
+    console.log("recording state in endInterview before toggleRecording: ", recording)
+    if (isRecording.current) toggleRecording();
+    console.log("recording state in endInterview after toggleRecording: ", recording)
+    setAiSpeaking(false)
 
     const transcriptId = await saveTranscriptToFirebase();
     if (transcriptId) {
@@ -230,9 +236,9 @@ const InterviewInterface = () => {
   
       // Also, pause or resume the recording based on the mic state
       if (audioTrack.enabled) {
-        if (!recording) toggleRecording(); // Resume recording when the mic is on
+        if (!isRecording.current) toggleRecording(); // Resume recording when the mic is on
       } else {
-        if (recording) toggleRecording(); // Pause/Stop recording when the mic is off
+        if (isRecording.current) toggleRecording(); // Pause/Stop recording when the mic is off
       }
     }
   };
