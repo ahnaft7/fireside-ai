@@ -87,7 +87,8 @@ export const useRecordVoice = () => {
   
           if (elapsedTime >= silenceDelay) {
             console.log("Silence period reached threshold, stopping recording.");
-            stopRecording();  // Trigger stopRecording after the silenceDelay has passed
+            setRecording(false);  // Trigger stopRecording after the silenceDelay has passed
+            mediaRecorder.current.stop(); 
             silenceTimer.current = null; // Reset the silence timer
           }
         }
@@ -109,6 +110,7 @@ export const useRecordVoice = () => {
     if (mediaRecorder.current && recording) {
       mediaRecorder.current.stop(); // Stop the media recorder
       setRecording(false);
+      
 
       // Stop all tracks on the stream
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
