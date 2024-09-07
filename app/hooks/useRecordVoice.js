@@ -72,7 +72,10 @@ export const useRecordVoice = () => {
 
       const normalizedVolume = maxVolume / 256; // Normalize volume to 0-1 range
       console.log(`Normalized Volume: ${normalizedVolume}`);
-
+      if (normalizedVolume > silenceThreshold) {
+        console.log("Speech exceeds threshold")
+        startRecording();
+      }
       if (normalizedVolume < silenceThreshold) {
         console.log('Silence detected');
         
@@ -87,8 +90,8 @@ export const useRecordVoice = () => {
   
           if (elapsedTime >= silenceDelay) {
             console.log("Silence period reached threshold, stopping recording.");
-            setRecording(false);  // Trigger stopRecording after the silenceDelay has passed
-            mediaRecorder.current.stop(); 
+            stopRecording();  // Trigger stopRecording after the silenceDelay has passed
+            
             silenceTimer.current = null; // Reset the silence timer
           }
         }
@@ -107,6 +110,8 @@ export const useRecordVoice = () => {
   };
   
   const stopRecording = () => {
+    console.log('media')
+    console.log(mediaRecorder.current)
     if (mediaRecorder.current && recording) {
       mediaRecorder.current.stop(); // Stop the media recorder
       setRecording(false);
