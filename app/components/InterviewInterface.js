@@ -1,6 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button"; // Assuming you're using Shadcn buttons
 import { useRecordVoice } from "@/app/hooks/useRecordVoice"; // Import the hook
+import { useUser } from "@clerk/nextjs";
+import { db } from "@/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+const DEBOUNCE_DELAY = 1000; // 1 second debounce
 
 const InterviewInterface = () => {
   const [isStarted, setIsStarted] = useState(false);
@@ -12,18 +17,69 @@ const InterviewInterface = () => {
   const [audioDevices, setAudioDevices] = useState([]); // List of audio devices
   const [selectedVideoDevice, setSelectedVideoDevice] = useState(""); // Selected video device
   const [selectedAudioDevice, setSelectedAudioDevice] = useState(""); // Selected audio device
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const { user } = useUser();
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
   const { recording, toggleRecording, text, response } = useRecordVoice();
 
+  const lastTextRef = useRef("");
+  const lastResponseRef = useRef("");
+  const textTimeoutRef = useRef(null);
+  const responseTimeoutRef = useRef(null);
+
+  const addToConversationHistory = useCallback((type, content) => {
+    if (content && content.trim() !== "") {
+      setConversationHistory(prev => {
+        const lastEntry = prev[prev.length - 1];
+        if (!lastEntry || lastEntry.type !== type || lastEntry.text !== content) {
+          return [...prev, { type, text: content, timestamp: timer }];
+        }
+        return prev;
+      });
+    }
+  }, [timer]);
+
+  const debouncedAddToHistory = useCallback((type, content, timeoutRef) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      addToConversationHistory(type, content);
+    }, DEBOUNCE_DELAY);
+  }, [addToConversationHistory]);
+
   useEffect(() => {
-    if (response) {
-      setAiSpeaking(true); // AI starts "speaking"
-      // Set a timeout to stop animation after a while (e.g., 3 seconds after the response)
+    if (text !== lastTextRef.current) {
+      debouncedAddToHistory('user', text, textTimeoutRef);
+      lastTextRef.current = text;
+    }
+  }, [text, debouncedAddToHistory]);
+
+  useEffect(() => {
+    if (response !== lastResponseRef.current) {
+      debouncedAddToHistory('ai', response, responseTimeoutRef);
+      lastResponseRef.current = response;
+      setAiSpeaking(true);
       const timeout = setTimeout(() => setAiSpeaking(false), 3000);
       return () => clearTimeout(timeout);
     }
-  }, [response]);
+  }, [response, debouncedAddToHistory]);
+
+  // useEffect(() => {
+  //   if (text && (conversationHistory.length === 0 || text !== conversationHistory[conversationHistory.length - 1]?.text)) {
+  //     setConversationHistory(prev => [...prev, { type: 'user', text, timestamp: timer }]);
+  //   }
+  // }, [text, timer]);
+
+  // useEffect(() => {
+  //   if (response && (conversationHistory.length === 0 || response !== conversationHistory[conversationHistory.length - 1]?.text)) {
+  //     setAiSpeaking(true);
+  //     setConversationHistory(prev => [...prev, { type: 'ai', text: response, timestamp: timer }]);
+  //     const timeout = setTimeout(() => setAiSpeaking(false), 3000);
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [response, timer]);
 
   // Function to fetch available devices
   const fetchDevices = async () => {
@@ -58,14 +114,46 @@ const InterviewInterface = () => {
     }
   };
 
+  const saveTranscriptToFirebase = async () => {
+    if (!user) {
+      console.error("No user logged in");
+      return;
+    }
+
+    try {
+      // Clear any pending debounced updates
+      clearTimeout(textTimeoutRef.current);
+      clearTimeout(responseTimeoutRef.current);
+
+      const transcriptRef = await addDoc(collection(db, "transcripts"), {
+        userId: user.id,
+        date: serverTimestamp(),
+        conversationHistory,
+        duration: timer
+      });
+
+      console.log("Transcript saved with ID: ", transcriptRef.id);
+      return transcriptRef.id;
+    } catch (error) {
+      console.error("Error saving transcript: ", error);
+    }
+  };
+
   // Function to end the interview session
-  const endInterview = () => {
-    streamRef.current.getTracks().forEach((track) => track.stop()); // Stop all media tracks
+  const endInterview = async () => {
+    streamRef.current.getTracks().forEach((track) => track.stop());
     setIsStarted(false);
     setIsVideoOn(false);
     setIsMicOn(false);
-    if (recording) toggleRecording(); // Stop recording when the interview ends
-    setTimer(0); // Reset the timer
+    if (recording) toggleRecording();
+
+    const transcriptId = await saveTranscriptToFirebase();
+    if (transcriptId) {
+      console.log("Interview session saved. Transcript ID:", transcriptId);
+    }
+
+    setTimer(0);
+    setConversationHistory([]);
   };
 
   // Function to switch camera
@@ -279,6 +367,18 @@ const InterviewInterface = () => {
         <h3 className="text-lg font-semibold mt-2">LLM Response:</h3>
         <p>{response}</p>
       </div>
+
+      {/* Live Transcript and LLM Response */}
+      <div className="mt-8 w-full max-w-4xl bg-gray-800 rounded-lg p-4 overflow-y-auto h-96" style={{ backgroundColor: "#333333" }}>
+        <h3 className="text-xl font-semibold text-white mb-4">Live Transcript</h3>
+        {conversationHistory.map((entry, index) => (
+          <div key={index} className={`mb-4 ${entry.type === 'user' ? 'text-blue-300' : 'text-green-300'}`}>
+            <span className="font-semibold">{entry.type === 'user' ? 'You' : 'AI'} ({formatTime(entry.timestamp)}):</span>
+            <p className="ml-4">{entry.text}</p>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 };
