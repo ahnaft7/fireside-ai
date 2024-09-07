@@ -45,16 +45,23 @@ export const useRecordVoice = () => {
 
     const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
     const db = 20 * Math.log10(average / 255);
+    console.log("Current db level: ", db)
 
     if (db < SILENCE_THRESHOLD) {
+      console.log("db is less than silence threshold of: ", SILENCE_THRESHOLD)
       if (silenceStart.current === null) {
+        console.log("Silence timer is null and restarting")
         silenceStart.current = Date.now();
       } else if (Date.now() - silenceStart.current > SILENCE_DURATION) {
-        console.log("Silence is greater than silence duration of: ", SILENCE_DURATION)
+        console.log("Silence time is greater than silence duration of: ", SILENCE_DURATION)
+        console.log("recording state before stopRecording after 3 sec silence: ", recording)
         stopRecording();
+        console.log("recording state after stopRecording after 3 sec silence: ", recording)
+        console.log("should've stopped recording")
         return;
       }
     } else {
+      console.log("db is more than silence threshold")
       silenceStart.current = null;
     }
 
@@ -86,7 +93,9 @@ export const useRecordVoice = () => {
       };
 
       mediaRecorder.current.start(1000); // Send audio data every 1 second
-      setRecording(true);
+      console.log("recording state before recording set to true in startRecording: ", recording)
+      setRecording(true); // this is not setting recording to true for some reason??????????????????
+      console.log("recording state after recording set to true in startRecording: ", recording)
       silenceStart.current = null;
       rafId.current = requestAnimationFrame(detectSilence);
     } catch (error) {
@@ -95,9 +104,14 @@ export const useRecordVoice = () => {
   };
 
   const stopRecording = () => {
+    console.log("Entered stop Recording function")
+    console.log("recording state entering stopRecording: ", recording)
     if (mediaRecorder.current && recording) {
+      console.log("mediaRecorder.current and recording")
+      console.log("recording state before turning off: ", recording)
       mediaRecorder.current.stop();
       setRecording(false);
+      console.log("recording state after turning off: ", recording)
       // Stop all tracks on the stream
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
       cancelAnimationFrame(rafId.current);
