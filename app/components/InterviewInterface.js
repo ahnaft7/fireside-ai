@@ -10,7 +10,7 @@ const DEBOUNCE_DELAY = 1000; // 1 second debounce
 const InterviewInterface = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
-  const [isMicOn, setIsMicOn] = useState(true);
+  const [isMicOn, setIsMicOn] = useState(false);
   const [aiSpeaking, setAiSpeaking] = useState(false); // State for AI speaking animation
   const [timer, setTimer] = useState(0); // State to track elapsed time
   const [videoDevices, setVideoDevices] = useState([]); // List of video devices
@@ -21,7 +21,7 @@ const InterviewInterface = () => {
   const { user } = useUser();
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
-  const { isRecording, recording, toggleRecording, text, response } = useRecordVoice();
+  const { isRecording, recording, toggleRecording, text, response, setMicState, setCallState } = useRecordVoice();
 
   const lastTextRef = useRef("");
   const lastResponseRef = useRef("");
@@ -108,8 +108,11 @@ const InterviewInterface = () => {
       streamRef.current = stream;
       setIsStarted(true);
       setIsVideoOn(true);
+      setIsMicOn(true);
+      setCallState(true);
+      setMicState(true);
       console.log("recording state in startInterview before toggleRecording: ", recording)
-      if (!isRecording.current) toggleRecording(); // Start recording when the interview starts
+      // if (!isRecording.current) toggleRecording(); // Start recording when the interview starts
       console.log("recording state in startInterview after toggleRecording: ", recording)
     } catch (err) {
       console.error("Error accessing media devices:", err);
@@ -151,9 +154,12 @@ const InterviewInterface = () => {
     setIsMicOn(false);
     console.log("isMicOn state: ", isMicOn)
     console.log("recording state in endInterview before toggleRecording: ", recording)
-    if (isRecording.current) toggleRecording();
+    if (isRecording) {
+      toggleRecording(); // Stop recording when ending the interview
+    }
     console.log("recording state in endInterview after toggleRecording: ", recording)
     setAiSpeaking(false)
+    setCallState(false);
 
     const transcriptId = await saveTranscriptToFirebase();
     if (transcriptId) {
@@ -233,13 +239,7 @@ const InterviewInterface = () => {
     if (audioTrack) {
       audioTrack.enabled = !audioTrack.enabled;
       setIsMicOn(audioTrack.enabled);
-  
-      // Also, pause or resume the recording based on the mic state
-      if (audioTrack.enabled) {
-        if (!isRecording.current) toggleRecording(); // Resume recording when the mic is on
-      } else {
-        if (isRecording.current) toggleRecording(); // Pause/Stop recording when the mic is off
-      }
+      setMicState(audioTrack.enabled);
     }
   };
 

@@ -16,6 +16,8 @@ export const useRecordVoice = () => {
   const rafId = useRef(null);
   const audioChunks = useRef([]);
   const isRecording = useRef(false);
+  const isMicOn = useRef(true);
+  const isCallActive = useRef(true);
 
   useEffect(() => {
     const wsUrl = process.env.NODE_ENV === 'production' 
@@ -30,6 +32,9 @@ export const useRecordVoice = () => {
         setText(data.text);
       } else if (data.type === 'llmResponse') {
         setResponse(data.response);
+        if (isMicOn.current && isCallActive.current) {
+          startRecording();
+        }
       }
     };
 
@@ -40,7 +45,25 @@ export const useRecordVoice = () => {
     };
   }, []);
 
-  const detectSilence = () => {
+  const stopRecording = useCallback(() => {
+    console.log("Entered stop Recording function")
+    console.log("recording state entering stopRecording: ", recording)
+    console.log("mediaRecorder status: ", mediaRecorder.current)
+    if (mediaRecorder.current && isRecording.current) {
+      console.log("mediaRecorder.current and recording")
+      console.log("recording state before turning off: ", recording)
+      mediaRecorder.current.stop();
+      isRecording.current = false;
+      setRecording(false);
+      console.log("recording state after turning off: ", recording)
+      // Stop all tracks on the stream
+      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+      cancelAnimationFrame(rafId.current);
+      silenceStart.current = null;
+    }
+  }, []);
+
+  const detectSilence = useCallback(() => {
     if (!isRecording.current) return;
 
     const dataArray = new Uint8Array(analyser.current.frequencyBinCount);
@@ -69,10 +92,16 @@ export const useRecordVoice = () => {
     }
 
     rafId.current = requestAnimationFrame(detectSilence);
-  };
+  }, [stopRecording]);
 
   const startRecording = useCallback(async () => {
+    if (!isMicOn.current || !isCallActive.current) return;
+
     try {
+      if (mediaRecorder.current) {
+        mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
 
@@ -80,6 +109,8 @@ export const useRecordVoice = () => {
       analyser.current = audioContext.current.createAnalyser();
       const source = audioContext.current.createMediaStreamSource(stream);
       source.connect(analyser.current);
+
+      audioChunks.current = []; // Reset audio chunks
 
       mediaRecorder.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -92,7 +123,7 @@ export const useRecordVoice = () => {
         if (websocket.current.readyState === WebSocket.OPEN) {
           websocket.current.send(audioBlob);
         }
-        audioChunks.current = [];
+        audioChunks.current = []; // Clear audio chunks after sending
       };
 
       mediaRecorder.current.start(1000); // Send audio data every 1 second
@@ -107,24 +138,6 @@ export const useRecordVoice = () => {
     }
   }, [detectSilence]);
 
-  const stopRecording = useCallback(() => {
-    console.log("Entered stop Recording function")
-    console.log("recording state entering stopRecording: ", recording)
-    console.log("mediaRecorder status: ", mediaRecorder.current)
-    if (mediaRecorder.current && isRecording.current) {
-      console.log("mediaRecorder.current and recording")
-      console.log("recording state before turning off: ", recording)
-      mediaRecorder.current.stop();
-      isRecording.current = false;
-      setRecording(false);
-      console.log("recording state after turning off: ", recording)
-      // Stop all tracks on the stream
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
-      cancelAnimationFrame(rafId.current);
-      silenceStart.current = null;
-    }
-  }, []);
-
   const toggleRecording = useCallback(async () => {
     if (isRecording.current) {
       stopRecording();
@@ -133,9 +146,37 @@ export const useRecordVoice = () => {
     }
   }, [startRecording, stopRecording]);
 
+  // const setMicState = useCallback((state) => {
+  //   isMicOn.current = state;
+  //   if (!state && isRecording.current) {
+  //     stopRecording();
+  //   } else if (state && !isRecording.current && isCallActive.current) {
+  //     startRecording();
+  //   }
+  // }, [stopRecording, startRecording]);
+
+  const setMicState = useCallback((state) => {
+    console.log("This is mic state: ", state)
+    isMicOn.current = state;
+    if (!state && isRecording.current) {
+      console.log("stopping recording")
+      stopRecording();
+    } else if (state && !isRecording.current) {
+      console.log("Mic and recording was off and wants to turn on")
+      startRecording();
+    }
+  }, [stopRecording, startRecording]);
+  
+  const setCallState = useCallback((state) => {
+    isCallActive.current = state;
+    if (!state && isRecording.current) {
+      stopRecording();
+    }
+  }, [stopRecording]);
+
   useEffect(() => {
     console.log("Recording state changed:", recording);
   }, [recording]);
 
-  return { isRecording, recording, toggleRecording, text, response };
+  return { isRecording: isRecording.current, recording, toggleRecording, text, response, setMicState, setCallState };
 };
