@@ -147,6 +147,8 @@ const InterviewInterface = () => {
   // Function to end the interview session
   const endInterview = async () => {
     streamRef.current.getTracks().forEach((track) => track.stop());
+    userVideoRef.current.srcObject = null;
+    streamRef.current = null;
     setIsStarted(false);
     console.log("isStarted state: ", isStarted)
     setIsVideoOn(false);
@@ -224,12 +226,35 @@ const InterviewInterface = () => {
     }
   };
 
-  // Function to toggle the video stream on/off
-  const toggleVideo = () => {
-    const videoTrack = streamRef.current.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      setIsVideoOn(videoTrack.enabled);
+  const toggleVideo = async () => {
+    if (streamRef.current) {
+      // If the stream is already started, toggle the video track
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoOn(videoTrack.enabled);
+      }
+    } else if (!isStarted && !isVideoOn) {
+      // If the call hasn't started yet and video is off, start the video stream
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false, // Only start the video stream, not audio
+        });
+        userVideoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setIsVideoOn(true);
+      } catch (err) {
+        console.error("Error accessing video stream:", err);
+      }
+    } else if (!isStarted && isVideoOn) {
+      // If the video was turned on before the call but should now be turned off
+      const videoTrack = streamRef.current?.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.stop();
+        setIsVideoOn(false);
+        userVideoRef.current.srcObject = null;
+      }
     }
   };
 
@@ -352,13 +377,13 @@ const InterviewInterface = () => {
         <Button onClick={endInterview} disabled={!isStarted} className="bg-red-500 text-white hover:bg-red-600">
           End Call
         </Button>
+        <Button onClick={toggleVideo} className={`${
+          isVideoOn ? "bg-gray-500" : "bg-green-500"
+          } text-white hover:bg-gray-600`}>
+          {isVideoOn ? "Turn Off Video" : "Turn On Video"}
+        </Button>
         {isStarted && (
           <>
-            <Button onClick={toggleVideo} className={`${
-              isVideoOn ? "bg-gray-500" : "bg-green-500"
-              } text-white hover:bg-gray-600`}>
-              {isVideoOn ? "Turn Off Video" : "Turn On Video"}
-            </Button>
             <Button onClick={toggleMic} className={`${
               isMicOn ? "bg-gray-500" : "bg-green-500"
               } text-white hover:bg-gray-600`}>
