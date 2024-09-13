@@ -86,12 +86,12 @@ const testimonials = [
 ]
 
 const companies = [
-  { name: "Snowflake", logo: "/fireside_logo.png?height=50&width=150" },
-  { name: "Citi", logo: "/fireside_logo.png?height=50&width=150" },
-  { name: "American Airlines", logo: "/fireside_logo.png?height=50&width=150" },
-  { name: "NBCUniversal", logo: "/fireside_logo.png?height=50&width=150" },
-  { name: "Meta", logo: "/fireside_logo.png?height=50&width=150" },
-  { name: "Google", logo: "/fireside_logo.png?height=50&width=150" },
+  { name: "Apple", logo: "/apple.svg?height=50&width=150" },
+  { name: "Netflix", logo: "/netflix.svg?height=50&width=150" },
+  { name: "LinkedIn", logo: "/linkedin.svg?height=50&width=150" },
+  { name: "Amazon", logo: "/amazon.svg?height=50&width=150" },
+  { name: "Meta", logo: "/meta.svg?height=50&width=150" },
+  { name: "Google", logo: "/google.svg?height=50&width=150" },
 ]
 
 const ContinuousCarousel = ({ items }) => {
@@ -105,7 +105,7 @@ const ContinuousCarousel = ({ items }) => {
         {items.concat(items).map((item, index) => (
           <div key={index} className="inline-block mx-4 align-middle">
             {'logo' in item ? (
-              <img src={item.logo} alt={item.name} className="h-12 w-auto" />
+              <img src={item.logo} alt={item.name} className="h-32 w-auto" />
             ) : (
               <Card className="bg-[#333333] border-[#444444] w-[300px] h-[250px] overflow-hidden">
                 <CardHeader className="pb-2">
