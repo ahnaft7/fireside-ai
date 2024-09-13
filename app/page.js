@@ -107,7 +107,7 @@ const ContinuousCarousel = ({ items }) => {
         transition={{ ease: "linear", duration: 30, repeat: Infinity }}
       >
         {items.concat(items).map((item, index) => (
-          <div key={index} className="inline-block mx-4 align-middle" style={{ width: itemWidth, marginRight: gap }}>
+          <div key={index} className="inline-block mx-4 align-middle" style={{ marginRight: gap }}>
             {'logo' in item ? (
               <img src={item.logo} alt={item.name} className="h-32 w-auto" />
             ) : (
