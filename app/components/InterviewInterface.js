@@ -11,7 +11,6 @@ const InterviewInterface = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
-  const [aiSpeaking, setAiSpeaking] = useState(false); // State for AI speaking animation
   const [timer, setTimer] = useState(0); // State to track elapsed time
   const [videoDevices, setVideoDevices] = useState([]); // List of video devices
   const [audioDevices, setAudioDevices] = useState([]); // List of audio devices
@@ -21,7 +20,8 @@ const InterviewInterface = () => {
   const { user } = useUser();
   const userVideoRef = useRef(null); // Reference to the user's video
   const streamRef = useRef(null);
-  const { isRecording, recording, toggleRecording, text, response, setMicState, setCallState } = useRecordVoice();
+  const isCallActive = useRef(true);
+  const { isRecording, recording, toggleRecording, text, response, setMicState, setCallState, responding, setRespondingState, isResponding } = useRecordVoice();
 
   const lastTextRef = useRef("");
   const lastResponseRef = useRef("");
@@ -60,9 +60,10 @@ const InterviewInterface = () => {
     if (response !== lastResponseRef.current) {
       debouncedAddToHistory('ai', response, responseTimeoutRef);
       lastResponseRef.current = response;
-      setAiSpeaking(true);
-      const timeout = setTimeout(() => setAiSpeaking(false), 3000);
-      return () => clearTimeout(timeout);
+      // setRespondingState(true);
+      // if (response?.trim() !== "") {
+      //   setRespondingState(false); // Immediately stop the animation when LLM finishes
+      // }
     }
   }, [response, debouncedAddToHistory]);
 
@@ -111,6 +112,8 @@ const InterviewInterface = () => {
       setIsMicOn(true);
       setCallState(true);
       setMicState(true);
+      isCallActive.current = true
+      console.log("isCallActive state after starting call: ", isCallActive.current)
       console.log("recording state in startInterview before toggleRecording: ", recording)
       // if (!isRecording.current) toggleRecording(); // Start recording when the interview starts
       console.log("recording state in startInterview after toggleRecording: ", recording)
@@ -146,6 +149,7 @@ const InterviewInterface = () => {
 
   // Function to end the interview session
   const endInterview = async () => {
+    console.log("isCallActive state before ending call: ", isCallActive.current)
     streamRef.current.getTracks().forEach((track) => track.stop());
     userVideoRef.current.srcObject = null;
     streamRef.current = null;
@@ -160,7 +164,9 @@ const InterviewInterface = () => {
       toggleRecording(); // Stop recording when ending the interview
     }
     console.log("recording state in endInterview after toggleRecording: ", recording)
-    setAiSpeaking(false)
+    setRespondingState(false);
+    isCallActive.current = false
+    console.log("isCallActive state after ending call: ", isCallActive.current)
     setCallState(false);
 
     const transcriptId = await saveTranscriptToFirebase();
@@ -292,7 +298,7 @@ const InterviewInterface = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4" style={{ backgroundColor: "#2A2A2A" }}>
       <div className="relative w-full h-[60vh] max-w-4xl bg-black rounded-lg overflow-hidden shadow-lg flex items-center justify-center">
         {/* Pulse Wave Effects (conditionally rendered based on aiSpeaking) */}
-        {aiSpeaking && (
+        {isResponding && isCallActive.current && (
           <div className="absolute flex items-center justify-center">
             <div className="pulse-wave"></div>
             <div className="pulse-wave"></div>
@@ -313,7 +319,7 @@ const InterviewInterface = () => {
           <img
             src="/fireside_logo.png" // Placeholder for AI interviewer logo
             alt="AI Interviewer"
-            className={`w-40 h-40 object-contain ${aiSpeaking ? "animate-sound" : ""}`}
+            className={`w-40 h-40 object-contain ${isResponding && isCallActive.current ? "animate-sound" : ""}`}
           />
         </div>
 

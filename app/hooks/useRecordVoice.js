@@ -8,6 +8,7 @@ export const useRecordVoice = () => {
   const [text, setText] = useState("");
   const [response, setResponse] = useState("");
   const [recording, setRecording] = useState(false);
+  const [responding, setRespondingState] = useState(false);
   const mediaRecorder = useRef(null);
   const websocket = useRef(null);
   const audioContext = useRef(null);
@@ -18,6 +19,7 @@ export const useRecordVoice = () => {
   const isRecording = useRef(false);
   const isMicOn = useRef(true);
   const isCallActive = useRef(true);
+  const isResponding = useRef(false);
 
   useEffect(() => {
     const wsUrl = process.env.NODE_ENV === 'production' 
@@ -31,6 +33,10 @@ export const useRecordVoice = () => {
       if (data.type === 'transcription') {
         setText(data.text);
       } else if (data.type === 'llmResponse') {
+        console.log("responding state before setting Response: ", responding)
+        setRespondingState(true)
+        isResponding.current = true;
+        console.log("responding state while setting Response: ", responding)
         setResponse(data.response);
         if (isMicOn.current && isCallActive.current) {
           startRecording();
@@ -55,6 +61,7 @@ export const useRecordVoice = () => {
       mediaRecorder.current.stop();
       isRecording.current = false;
       setRecording(false);
+      isResponding.current = true
       console.log("recording state after turning off: ", recording)
       // Stop all tracks on the stream
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
@@ -101,7 +108,9 @@ export const useRecordVoice = () => {
       if (mediaRecorder.current) {
         mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
       }
-
+      console.log("responding state when starting recording: ", responding)
+      setRespondingState(false)
+      isResponding.current = false;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
 
@@ -178,5 +187,5 @@ export const useRecordVoice = () => {
     console.log("Recording state changed:", recording);
   }, [recording]);
 
-  return { isRecording: isRecording.current, recording, toggleRecording, text, response, setMicState, setCallState };
+  return { isRecording: isRecording.current, recording, toggleRecording, text, response, setMicState, setCallState, responding, setRespondingState, isResponding: isResponding.current };
 };
