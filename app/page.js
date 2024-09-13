@@ -154,7 +154,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-[#FCD19C]">AI Mock Interview</h2>
+            <h2 className="text-2xl font-bold text-[#FCD19C]">Fireside AI</h2>
             <div className="flex space-x-4">
               <Link href="#" className="text-gray-300 hover:text-[#FCD19C]">
                 <Facebook size={20} />
@@ -173,16 +173,15 @@ const Footer = () => {
               </Link>
             </div>
             <p className="text-sm text-gray-300">
-              A worldwide team from San Francisco, New York City, and London
+              A team from New York City
             </p>
           </div>
           
           <div>
             <h3 className="text-lg font-semibold mb-4 text-[#FCD19C]">Product</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className="text-gray-300 hover:text-white">AI Interview Copilot</Link></li>
               <li><Link href="#" className="text-gray-300 hover:text-white">AI Mock Interview</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-white">AI Resume Builder</Link></li>
+              <li><Link href="#" className="text-gray-300 hover:text-white">AI Interview Flashcards</Link></li>
             </ul>
           </div>
           
@@ -203,9 +202,8 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4 text-[#FCD19C]">Blogs</h3>
             <ul className="space-y-2">
-              <li><Link href="#" className="text-gray-300 hover:text-white">Discover AI Interview Copilot</Link></li>
               <li><Link href="#" className="text-gray-300 hover:text-white">Discover AI Mock Interview</Link></li>
-              <li><Link href="#" className="text-gray-300 hover:text-white">Discover AI Resume Builder</Link></li>
+              <li><Link href="#" className="text-gray-300 hover:text-white">Discover AI Interview Flashcards</Link></li>
               <li><Link href="#" className="text-gray-300 hover:text-white">Popular Tools for Interview 2024</Link></li>
               <li><Link href="#" className="text-gray-300 hover:text-white">How to Stand Out During an Interview</Link></li>
               <li><Link href="#" className="text-gray-300 hover:text-white">Interview Tips for New Grads</Link></li>
@@ -215,7 +213,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm text-gray-300">
-          <p>&copy; {new Date().getFullYear()} AI Mock Interview. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Fireside AI. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -235,9 +233,11 @@ export default function LandingPage() {
           <p className="mb-8 text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
             Get real-time feedback, tailored questions, and AI-driven interview analysis to help you ace your next interview.
           </p>
-          <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
-            Start a Mock Interview
-          </Button>
+          <Link href="/interview" passHref>
+            <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
+              Start a Mock Interview
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -363,9 +363,11 @@ export default function LandingPage() {
           <p className="mb-8 text-lg sm:text-xl text-gray-300">
             Start practicing with our AI-powered platform today and boost your confidence.
           </p>
-          <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
-            Start a Mock Interview
-          </Button>
+          <Link href="/interview" passHref>
+            <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
+              Start a Mock Interview
+            </Button>
+          </Link>
         </div>
       </section>
 
