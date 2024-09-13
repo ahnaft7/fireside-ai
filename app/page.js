@@ -226,37 +226,39 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#2A2A2A] text-white font-sans">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h3 className="text-[#FCD19C] text-sm font-semibold mb-4">AI MOCK INTERVIEW PLATFORM</h3>
-        <h1 className="mb-4 text-5xl font-bold leading-tight">
-          Prepare for your next interview with AI
-        </h1>
-        <p className="mb-8 text-xl text-gray-400 max-w-2xl mx-auto">
-          Get real-time feedback, tailored questions, and AI-driven interview analysis to help you ace your next interview.
-        </p>
-        <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
-          Start a Mock Interview
-        </Button>
+      <section className="px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <div className="max-w-screen-xl mx-auto">
+          <h3 className="text-[#FCD19C] text-sm font-semibold mb-4">AI MOCK INTERVIEW PLATFORM</h3>
+          <h1 className="mb-4 text-4xl sm:text-5xl font-bold leading-tight">
+            Prepare for your next interview with AI
+          </h1>
+          <p className="mb-8 text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
+            Get real-time feedback, tailored questions, and AI-driven interview analysis to help you ace your next interview.
+          </p>
+          <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
+            Start a Mock Interview
+          </Button>
+        </div>
       </section>
 
       {/* Statistics and Companies Section */}
       <section className="py-16 bg-[#222222]">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-around mb-12">
-            <div className="text-center">
-              <h2 className="text-4xl font-bold text-[#FCD19C]">96%</h2>
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap justify-around mb-12">
+            <div className="text-center w-full sm:w-auto mb-4 sm:mb-0">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">96%</h2>
               <p className="text-gray-300">Interview Success Rate</p>
             </div>
-            <div className="text-center">
-              <h2 className="text-4xl font-bold text-[#FCD19C]">7000+</h2>
+            <div className="text-center w-full sm:w-auto mb-4 sm:mb-0">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">7000+</h2>
               <p className="text-gray-300">Interviews Aced</p>
             </div>
-            <div className="text-center">
-              <h2 className="text-4xl font-bold text-[#FCD19C]">1500+</h2>
+            <div className="text-center w-full sm:w-auto">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">1500+</h2>
               <p className="text-gray-300">Offers</p>
             </div>
           </div>
-          <div className="mt-8">
+          <div className="mt-8 overflow-hidden">
             <ContinuousCarousel items={companies} />
           </div>
         </div>
@@ -264,27 +266,27 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section className="py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-16">Key Features</h2>
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-16">Key Features</h2>
           {features.map((feature, index) => (
             <ScrollAnimatedSection key={index}>
-              <div className={`flex flex-col ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center mb-20`}>
-                <div className="w-full md:w-1/2 mb-8 md:mb-0">
+              <div className={`flex flex-col ${index % 2 === 0 ? 'md:mb-8 md:mr-8 md:flex-row' : 'md:mb-8 md:ml-8 md:flex-row-reverse'} items-center mb-20`}>
+                <div className="w-full lg:w-1/2 mb-8 lg:mb-0">
                   <Card className="bg-[#333333] border-[#444444]">
                     <CardHeader>
-                      <CardTitle className="flex items-center text-2xl">
+                      <CardTitle className="flex items-center text-xl sm:text-2xl">
                         {feature.icon}
                         <span className="ml-4">{feature.title}</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-gray-300 text-lg">{feature.description}</p>
+                      <p className="text-gray-300 text-base sm:text-lg">{feature.description}</p>
                     </CardContent>
                   </Card>
                 </div>
-                <div className="w-full md:w-1/2 md:px-8">
+                <div className="w-full lg:w-1/2 md:px-8 lg:px-8">
                   <div className="bg-[#333333] p-6 rounded-lg h-64 flex items-center justify-center">
-                    <p className="text-2xl font-semibold text-center">Visual Representation of {feature.title}</p>
+                    <p className="text-xl sm:text-2xl font-semibold text-center">Visual Representation of {feature.title}</p>
                   </div>
                 </div>
               </div>
@@ -295,9 +297,9 @@ export default function LandingPage() {
 
       {/* Use Cases Section */}
       <section className="py-20 bg-[#222222]">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Use Cases</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">Use Cases</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {useCases.map((useCase, index) => (
               <ScrollAnimatedSection key={index}>
                 <Card className="bg-[#333333] border-[#444444]">
@@ -318,9 +320,9 @@ export default function LandingPage() {
 
       {/* Pricing Section */}
       <section className="py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-12">Pricing Plans</h2>
-          <div className="flex flex-col md:flex-row justify-center items-center md:items-stretch gap-8">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">Pricing Plans</h2>
+          <div className="flex flex-col lg:flex-row justify-center items-center lg:items-stretch gap-8">
             <PricingPlan
               title="Free Plan"
               price="$0/month"
@@ -347,20 +349,24 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-[#222222] overflow-hidden">
-        <h2 className="text-4xl font-bold text-center mb-12">What Our Users Say</h2>
-        <ContinuousCarousel items={testimonials} />
+      <section className="py-20 bg-[#222222] ">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12">What Our Users Say</h2>
+          <ContinuousCarousel items={testimonials} />
+        </div>
       </section>
 
       {/* Call to Action */}
       <section className="py-20 text-center">
-        <h2 className="mb-4 text-4xl font-bold">Ready to Ace Your Next Interview?</h2>
-        <p className="mb-8 text-xl text-gray-300">
-          Start practicing with our AI-powered platform today and boost your confidence.
-        </p>
-        <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
-          Start a Mock Interview
-        </Button>
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="mb-4 text-3xl sm:text-4xl font-bold">Ready to Ace Your Next Interview?</h2>
+          <p className="mb-8 text-lg sm:text-xl text-gray-300">
+            Start practicing with our AI-powered platform today and boost your confidence.
+          </p>
+          <Button className="bg-[#FCD19C] hover:bg-[#f8c27e] text-[#2A2A2A] font-bold py-3 px-6 rounded-md text-lg">
+            Start a Mock Interview
+          </Button>
+        </div>
       </section>
 
       {/* Footer */}

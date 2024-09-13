@@ -92,9 +92,9 @@ export default function RootLayout({ children }) {
             </NavigationMenu>
           </div> */}
           <Navbar />
-          <main className="container mx-auto py-4">
-            {children}
-          </main>
+          
+          {children}
+          
         </body>
       </html>
     </ClerkProvider>

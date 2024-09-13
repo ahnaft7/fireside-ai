@@ -78,6 +78,18 @@
   }
 }
 
+html, body {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#__next {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 @layer base {
   * {
     @apply border-border;
