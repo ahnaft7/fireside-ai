@@ -158,7 +158,11 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-[#FCD19C]">Fireside AI</h2>
+            <div className="flex items-center space-x-2">
+              {/* Logo Image */}
+              <img src="/fireside_logo.png" alt="Fireside AI Logo" className="w-8 h-8" />
+              <h2 className="text-2xl font-bold text-[#FCD19C]">Fireside AI</h2>
+            </div>
             <div className="flex space-x-4">
               <Link href="#" className="text-gray-300 hover:text-[#FCD19C]">
                 <Facebook size={20} />
@@ -177,7 +181,7 @@ const Footer = () => {
               </Link>
             </div>
             <p className="text-sm text-gray-300">
-              A team from New York City
+              A team based in New York City
             </p>
           </div>
           
