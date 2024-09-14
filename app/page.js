@@ -248,16 +248,16 @@ export default function LandingPage() {
       {/* Statistics and Companies Section */}
       <section className="py-16 bg-[#222222]">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap justify-around mb-12">
-            <div className="text-center w-full sm:w-auto mb-4 sm:mb-0">
+          <div className="flex flex-col sm:flex-row justify-around mb-12">
+            <div className="text-center flex-grow basis-1/3 sm:w-auto mb-4 sm:mb-0">
               <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">96%</h2>
               <p className="text-gray-300">Interview Success Rate</p>
             </div>
-            <div className="text-center w-full sm:w-auto mb-4 sm:mb-0">
+            <div className="text-center flex-grow basis-1/3 sm:w-auto mb-4 sm:mb-0">
               <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">7000+</h2>
               <p className="text-gray-300">Interviews Aced</p>
             </div>
-            <div className="text-center w-full sm:w-auto">
+            <div className="text-center flex-grow basis-1/3 sm:w-auto">
               <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">1500+</h2>
               <p className="text-gray-300">Offers</p>
             </div>
