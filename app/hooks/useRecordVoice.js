@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 
 const SILENCE_THRESHOLD = -50; // dB
 const SILENCE_DURATION = 3000; // 3 seconds
+const ANALYSIS_INTERVAL = 100; // Analyze every 100ms
 
 export const useRecordVoice = () => {
   const [text, setText] = useState("");
@@ -20,6 +21,8 @@ export const useRecordVoice = () => {
   const isMicOn = useRef(true);
   const isCallActive = useRef(true);
   const isResponding = useRef(false);
+  const silenceBuffer = useRef([]);
+  const analysisInterval = useRef(null);
 
   useEffect(() => {
     const wsUrl = process.env.NODE_ENV === 'production' 
@@ -52,21 +55,23 @@ export const useRecordVoice = () => {
   }, []);
 
   const stopRecording = useCallback(() => {
-    console.log("Entered stop Recording function")
-    console.log("recording state entering stopRecording: ", recording)
-    console.log("mediaRecorder status: ", mediaRecorder.current)
+    console.log("Entered stop Recording function");
     if (mediaRecorder.current && isRecording.current) {
-      console.log("mediaRecorder.current and recording")
-      console.log("recording state before turning off: ", recording)
       mediaRecorder.current.stop();
       isRecording.current = false;
       setRecording(false);
-      isResponding.current = true
-      console.log("recording state after turning off: ", recording)
+      isResponding.current = true;
+
       // Stop all tracks on the stream
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
-      cancelAnimationFrame(rafId.current);
-      silenceStart.current = null;
+      
+      // Clear the analysis interval
+      if (analysisInterval.current) {
+        clearInterval(analysisInterval.current);
+        analysisInterval.current = null;
+      }
+
+      silenceBuffer.current = [];
     }
   }, []);
 
@@ -78,27 +83,22 @@ export const useRecordVoice = () => {
 
     const average = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
     const db = 20 * Math.log10(average / 255);
-    console.log("Current db level: ", db)
 
-    if (db < SILENCE_THRESHOLD) {
-      console.log("db is less than silence threshold of: ", SILENCE_THRESHOLD)
-      if (silenceStart.current === null) {
-        console.log("Silence timer is null and restarting")
-        silenceStart.current = Date.now();
-      } else if (Date.now() - silenceStart.current > SILENCE_DURATION) {
-        console.log("Silence time is greater than silence duration of: ", SILENCE_DURATION)
-        console.log("recording state before stopRecording after 3 sec silence: ", recording)
-        stopRecording();
-        console.log("recording state after stopRecording after 3 sec silence: ", recording)
-        console.log("should've stopped recording")
-        return;
-      }
-    } else {
-      console.log("db is more than silence threshold")
-      silenceStart.current = null;
+    silenceBuffer.current.push({ time: Date.now(), db: db });
+
+    // Keep only the last 3 seconds of data
+    while (silenceBuffer.current.length > 0 && 
+           Date.now() - silenceBuffer.current[0].time > SILENCE_DURATION) {
+      silenceBuffer.current.shift();
     }
 
-    rafId.current = requestAnimationFrame(detectSilence);
+    const isSilent = silenceBuffer.current.every(sample => sample.db < SILENCE_THRESHOLD);
+
+    if (isSilent && silenceBuffer.current.length > 0 && 
+        Date.now() - silenceBuffer.current[0].time >= SILENCE_DURATION) {
+      console.log("Silence detected for more than 3 seconds");
+      stopRecording();
+    }
   }, [stopRecording]);
 
   const startRecording = useCallback(async () => {
@@ -136,12 +136,18 @@ export const useRecordVoice = () => {
       };
 
       mediaRecorder.current.start(1000); // Send audio data every 1 second
-      console.log("recording state before recording set to true in startRecording: ", recording)
       isRecording.current = true;
-      setRecording(true); // this is not setting recording to true for some reason??????????????????
-      console.log("recording state after recording set to true in startRecording: ", recording)
-      silenceStart.current = null;
-      rafId.current = requestAnimationFrame(detectSilence);
+      setRecording(true);
+      silenceBuffer.current = [];
+      
+      // Clear any existing interval
+      if (analysisInterval.current) {
+        clearInterval(analysisInterval.current);
+      }
+      
+      // Set up the new analysis interval
+      analysisInterval.current = setInterval(detectSilence, ANALYSIS_INTERVAL);
+
     } catch (error) {
       console.error('Error starting recording:', error);
     }

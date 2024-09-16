@@ -258,11 +258,11 @@ export default function LandingPage() {
               <p className="text-gray-300">Interview Success Rate</p>
             </div>
             <div className="text-center flex-grow basis-1/3 sm:w-auto mb-4 sm:mb-0">
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">7000+</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">1000+</h2>
               <p className="text-gray-300">Interviews Aced</p>
             </div>
             <div className="text-center flex-grow basis-1/3 sm:w-auto">
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">1500+</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#FCD19C]">500+</h2>
               <p className="text-gray-300">Offers</p>
             </div>
           </div>
