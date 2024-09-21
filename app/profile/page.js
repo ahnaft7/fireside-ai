@@ -13,6 +13,17 @@ import { PlusCircle, Send, Pencil, Trash2 } from "lucide-react";
 import { db } from "@/firebase";
 import { doc, collection, setDoc, getDoc } from "firebase/firestore";
 import Link from 'next/link'
+import { HfInference } from '@huggingface/inference';
+import { Pinecone } from "@pinecone-database/pinecone";
+// import pinecone from '@/utils/pinecone';
+
+const hf = new HfInference({ 
+    apiKey: process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY // Store your API key securely
+});
+
+const pinecone = new Pinecone({
+    apiKey: process.env.NEXT_PUBLIC_PINECONE_API_KEY,
+});
 
 export default function Profile() {
     const { isLoaded, isSignedIn, user } = useUser()
@@ -127,6 +138,53 @@ export default function Profile() {
         }
     };
 
+    const generateEmbeddings = async (profileData) => {
+        const profileText = `
+            Experiences: ${profileData.experiences.map(exp => `${exp.Position} at ${exp.Company}`).join(', ')};
+            Education: ${profileData.education.highestEducation};
+            Skills: ${profileData.skills.topSkills};
+            Career Goals: ${profileData.careerGoals.goals};
+        `;
+        
+        const embeddings = await hf.featureExtraction({
+            model: "sentence-transformers/all-MiniLM-L6-v2",
+            inputs: profileText
+        });
+    
+        return embeddings;
+    };
+
+    async function ensureIndexExists(indexName) {
+        const indexes = await pinecone.listIndexes();
+        if (Array.isArray(indexes) && !indexes.includes(indexName)) {
+            console.log(`Index ${indexName} does not exist. Creating index...`);
+            await pinecone.createIndex({
+                name: indexName,
+                dimension: 384, // Depends on embedding model
+                metric: 'cosine', // Depends on embedding model
+                spec: { 
+                    serverless: { 
+                        cloud: 'aws', 
+                        region: 'us-east-1' 
+                    }
+                }
+            });
+            console.log(`Index ${indexName} created successfully.`);
+        } else {
+            console.log(`Index ${indexName} already exists.`);
+        }
+    }
+    
+    const saveEmbeddingsToPinecone = async (userId, embeddings) => {
+        await ensureIndexExists('fireside-ai')
+        const index = pinecone.Index("fireside-ai");
+        await index.upsert({
+            vectors: [{ id: userId, values: embeddings }],
+            namespace: `user_${userId}` // Unique namespace for each user
+        });
+    };
+    
+
     const saveProfile = async () => {
         if (!user || !user.id) {
             console.error('User not found or user ID is missing.');
@@ -165,6 +223,18 @@ export default function Profile() {
             skills,
             additionalInfo
         };
+
+        try {
+            // Generate embeddings using Hugging Face
+            const embeddings = await generateEmbeddings(profileData);
+            
+            // Save embeddings to Pinecone
+            await saveEmbeddingsToPinecone(user.id, embeddings);
+            
+            console.log('Embeddings saved successfully!');
+        } catch (error) {
+            console.error('Error:', error);
+        }
     
         // try {
         //     const response = await fetch('/api/generate', {
